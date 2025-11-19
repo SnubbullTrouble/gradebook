@@ -6,7 +6,7 @@ from peewee import (
     ForeignKeyField,
     FloatField,
     TextField,
-    IntegrityError,
+    IntegerField,
 )
 from typing import List
 
@@ -84,6 +84,7 @@ class StudentAssignmentScore(BaseModel):
     roster_entry = ForeignKeyField(ClassRoster, backref="scores", on_delete="CASCADE")
     class_assignment = ForeignKeyField(ClassAssignment, backref="scores", on_delete="CASCADE")
     total_score = FloatField()
+    total_time = IntegerField(null=True)  # in seconds, optional
 
 
 class AssignmentCategoryWeight(BaseModel):

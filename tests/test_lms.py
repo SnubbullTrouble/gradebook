@@ -83,7 +83,7 @@ def test_record_full_assignment_success():
     a = create_assignment("Essay 1", "homework", [20])
     class_assignment = assign_to_class(c, a)
     scores = {q.id: q.point_value for q in a.questions}
-    record = record_full_assignment(roster, class_assignment, scores)
+    record = record_full_assignment(roster, class_assignment, scores, total_time=3600)
     assert record.total_score == sum(scores.values())
 
 
@@ -93,7 +93,7 @@ def test_record_assignment_for_non_enrolled_student_raises():
     a = create_assignment("Quiz 2", "quiz", [5])
     class_assignment = assign_to_class(c, a)
     with pytest.raises(IntegrityError):
-        record_full_assignment(ClassRoster(class_ref=c, student=s), class_assignment, {1: 5})
+        record_full_assignment(ClassRoster(class_ref=c, student=s), class_assignment, {1: 5}, total_time=600)
 
 
 def test_set_category_weight_and_compute_grade():
@@ -104,8 +104,8 @@ def test_set_category_weight_and_compute_grade():
     a2 = create_assignment("Homework 1", "homework", [10])
     ca1 = assign_to_class(c, a1)
     ca2 = assign_to_class(c, a2)
-    record_full_assignment(roster, ca1, {q.id: q.point_value for q in a1.questions})
-    record_full_assignment(roster, ca2, {q.id: q.point_value for q in a2.questions})
+    record_full_assignment(roster, ca1, {q.id: q.point_value for q in a1.questions}, total_time=1200)
+    record_full_assignment(roster, ca2, {q.id: q.point_value for q in a2.questions}, total_time=1800)
     set_category_weight(c, "quiz", 0.7)
     set_category_weight(c, "homework", 0.3)
     final_grade = compute_final_grade(roster)
@@ -124,7 +124,7 @@ def test_compute_grade_with_multiple_assignments_and_types():
     assign_to_class(c, a3)
     for a in [a1, a2, a3]:
         ca = ClassAssignment.get(class_ref=c, assignment=a)
-        record_full_assignment(roster, ca, {q.id: q.point_value for q in a.questions})
+        record_full_assignment(roster, ca, {q.id: q.point_value for q in a.questions}, total_time=1500)
     set_category_weight(c, "quiz", 0.2)
     set_category_weight(c, "test", 0.5)
     set_category_weight(c, "homework", 0.3)
@@ -138,7 +138,7 @@ def test_assignment_with_zero_questions():
     roster = enroll_student(c, s)
     a = create_assignment("Empty Assignment", "homework", [])
     ca = assign_to_class(c, a)
-    record = record_full_assignment(roster, ca, {})
+    record = record_full_assignment(roster, ca, {}, total_time=0)
     assert record.total_score == 0
 
 

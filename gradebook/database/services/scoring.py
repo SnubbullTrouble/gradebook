@@ -12,6 +12,7 @@ def record_full_assignment(
     roster_entry: ClassRoster,
     class_assignment: ClassAssignment,
     question_scores: Dict[int, float],
+    total_time: int = None,
 ) -> StudentAssignmentScore:
     """
     Record a student's score for a full assignment.
@@ -29,6 +30,7 @@ def record_full_assignment(
         roster_entry=roster_entry,
         class_assignment=class_assignment,
         total_score=total_score,
+        total_time=total_time
     )
 
 
