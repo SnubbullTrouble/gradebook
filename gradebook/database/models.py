@@ -1,183 +1,111 @@
-"""
-Database models for a SQLite-based Learning Management System (LMS).
-Implements:
-- Students (+ student numbers)
-- Classes and rosters
-- Reusable assignments + questions
-- Class-assignment linking
-- Student submissions and per-question scores
-- Category weights and student category totals
+from peewee import (
+    Model,
+    SqliteDatabase,
+    AutoField,
+    CharField,
+    ForeignKeyField,
+    FloatField,
+    TextField,
+    IntegrityError,
+)
+from typing import List
 
-Uses Peewee ORM.
-"""
+# Use in-memory database for tests; replace with file path for production
+db = SqliteDatabase(':memory:')
 
-from __future__ import annotations
-from typing import Optional
-from enum import Enum
-from peewee import *
-
-
-# ---------------------------------------------------------------------------
-# Database
-# ---------------------------------------------------------------------------
-
-db = SqliteDatabase("school.db")
-
-
-# ---------------------------------------------------------------------------
-# ENUMS
-# ---------------------------------------------------------------------------
-
-class AssignmentType(str, Enum):
-    """Enumeration of assignment types."""
-    QUIZ = "quiz"
-    TEST = "test"
-    HOMEWORK = "homework"
-
-
-# ---------------------------------------------------------------------------
-# Base Model
-# ---------------------------------------------------------------------------
 
 class BaseModel(Model):
-    """Base model for all Peewee models ensuring they use the shared database."""
+    """Base model class for Peewee."""
+
     class Meta:
         database = db
 
 
-# ---------------------------------------------------------------------------
-# Core Models
-# ---------------------------------------------------------------------------
-
 class Class(BaseModel):
-    """Represents a class (course)."""
-    name: str = CharField()
-    term: Optional[str] = CharField(null=True)
-    teacher: Optional[str] = CharField(null=True)
+    """Represents a class/course."""
+
+    id = AutoField()
+    name = CharField(unique=True)
 
 
 class Student(BaseModel):
-    """Represents a student with a unique student number."""
-    student_number: str = CharField(unique=True)
-    first_name: str = CharField()
-    last_name: str = CharField()
+    """Represents a student."""
+
+    id = AutoField()
+    student_number = CharField(unique=True)
+    first_name = CharField()
+    last_name = CharField()
 
 
 class ClassRoster(BaseModel):
-    """
-    Links students to classes (many-to-many).
-    Prevents duplicates with a unique index.
-    """
-    class_ref: Class = ForeignKeyField(Class, backref="roster", on_delete="CASCADE")
-    student: Student = ForeignKeyField(Student, backref="classes", on_delete="CASCADE")
+    """Link between a Class and a Student."""
+
+    id = AutoField()
+    class_ref = ForeignKeyField(Class, backref="roster", on_delete="CASCADE")
+    student = ForeignKeyField(Student, backref="classes", on_delete="CASCADE")
 
     class Meta:
-        indexes = ((( "class_ref", "student" ), True),)
+        indexes = ((("class_ref", "student"), True),)  # unique constraint
 
-
-# ---------------------------------------------------------------------------
-# Assignment Definitions (Reusable Templates)
-# ---------------------------------------------------------------------------
 
 class Assignment(BaseModel):
-    """A reusable assignment definition (template)."""
-    title: str = CharField()
-    type: str = CharField(choices=[t.value for t in AssignmentType])
+    """Represents an assignment."""
+
+    id = AutoField()
+    title = CharField()
+    category = CharField()  # quiz, test, homework
 
 
 class AssignmentQuestion(BaseModel):
-    """Represents a question belonging to an assignment."""
-    assignment: Assignment = ForeignKeyField(Assignment, backref="questions", on_delete="CASCADE")
-    question_number: int = IntegerField()
-    point_value: float = FloatField()
+    """Represents a question for an assignment."""
 
+    id = AutoField()
+    assignment = ForeignKeyField(Assignment, backref="questions", on_delete="CASCADE")
+    text = TextField()
+    point_value = FloatField()
 
-# ---------------------------------------------------------------------------
-# Class-Assignment Linking
-# ---------------------------------------------------------------------------
 
 class ClassAssignment(BaseModel):
-    """
-    Associates a reusable assignment with a specific class.
-    Contains per-class metadata like due dates and total points.
-    """
-    class_ref: Class = ForeignKeyField(Class, backref="assignments", on_delete="CASCADE")
-    assignment: Assignment = ForeignKeyField(Assignment, backref="class_links", on_delete="CASCADE")
-    due_date: Optional[str] = DateField(null=True)
-    total_points: Optional[float] = FloatField(null=True)
+    """Assignment assigned to a specific class."""
+
+    id = AutoField()
+    class_ref = ForeignKeyField(Class, backref="assignments", on_delete="CASCADE")
+    assignment = ForeignKeyField(Assignment, backref="assigned_classes", on_delete="CASCADE")
+    total_points = FloatField()
 
     class Meta:
-        indexes = ((( "class_ref", "assignment" ), True),)
+        indexes = ((("class_ref", "assignment"), True),)
 
 
-# ---------------------------------------------------------------------------
-# Student Assignments + Score Records
-# ---------------------------------------------------------------------------
+class StudentAssignmentScore(BaseModel):
+    """Tracks a student's score on a class assignment."""
 
-class StudentAssignment(BaseModel):
-    """Represents a student's submission for an assignment."""
-    roster_entry: ClassRoster = ForeignKeyField(ClassRoster, backref="assignments", on_delete="CASCADE")
-    class_assignment: ClassAssignment = ForeignKeyField(ClassAssignment, backref="student_assignments", on_delete="CASCADE")
-    total_score: Optional[float] = FloatField(null=True)
+    id = AutoField()
+    roster_entry = ForeignKeyField(ClassRoster, backref="scores", on_delete="CASCADE")
+    class_assignment = ForeignKeyField(ClassAssignment, backref="scores", on_delete="CASCADE")
+    total_score = FloatField()
 
-    class Meta:
-        indexes = ((( "roster_entry", "class_assignment" ), True),)
-
-
-class StudentAssignmentQuestion(BaseModel):
-    """Score for a student's response to a specific question."""
-    student_assignment: StudentAssignment = ForeignKeyField(
-        StudentAssignment, backref="question_scores", on_delete="CASCADE"
-    )
-    question: AssignmentQuestion = ForeignKeyField(
-        AssignmentQuestion, backref="student_scores", on_delete="CASCADE"
-    )
-    score: Optional[float] = FloatField(null=True)
-
-    class Meta:
-        indexes = ((( "student_assignment", "question" ), True),)
-
-
-# ---------------------------------------------------------------------------
-# Category Weights + Student Totals
-# ---------------------------------------------------------------------------
 
 class AssignmentCategoryWeight(BaseModel):
-    """Weight for each assignment type for a given class."""
-    class_ref: Class = ForeignKeyField(Class, backref="category_weights", on_delete="CASCADE")
-    type: str = CharField(choices=[t.value for t in AssignmentType])
-    weight: float = FloatField()
+    """Stores weights for assignment categories for a class."""
 
+    id = AutoField()
+    class_ref = ForeignKeyField(Class, backref="category_weights", on_delete="CASCADE")
+    category = CharField()  # quiz, test, homework
+    weight = FloatField()
     class Meta:
-        indexes = ((( "class_ref", "type" ), True),)
+        indexes = ((("class_ref", "category"), True),)
 
 
-class StudentCategoryScore(BaseModel):
-    """Stores total points per assignment category for a student."""
-    roster_entry: ClassRoster = ForeignKeyField(ClassRoster, backref="category_scores", on_delete="CASCADE")
-    type: str = CharField(choices=[t.value for t in AssignmentType])
-    total_score: float = FloatField(default=0.0)
-
-    class Meta:
-        indexes = ((( "roster_entry", "type" ), True),)
-
-
-# ---------------------------------------------------------------------------
-# Initialization
-# ---------------------------------------------------------------------------
-
-def initialize_db() -> None:
-    """Create all database tables."""
-    with db:
-        db.create_tables([
-            Class,
-            Student,
-            ClassRoster,
-            Assignment,
-            AssignmentQuestion,
-            ClassAssignment,
-            StudentAssignment,
-            StudentAssignmentQuestion,
-            AssignmentCategoryWeight,
-            StudentCategoryScore,
-        ])
+# Create tables
+db.connect()
+db.create_tables([
+    Class,
+    Student,
+    ClassRoster,
+    Assignment,
+    AssignmentQuestion,
+    ClassAssignment,
+    StudentAssignmentScore,
+    AssignmentCategoryWeight
+])

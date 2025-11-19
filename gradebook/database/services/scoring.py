@@ -1,71 +1,91 @@
-"""
-Scoring and grading for student assignments.
-"""
-
-from __future__ import annotations
-from typing import Dict, Tuple
-from models import (
-    StudentAssignment, StudentAssignmentQuestion,
-    ClassRoster, ClassAssignment, AssignmentQuestion
+from typing import Dict
+from gradebook.database.models import (
+    ClassRoster,
+    ClassAssignment,
+    StudentAssignmentScore,
+    AssignmentCategoryWeight,
+    Class,
 )
-
-
-def create_student_assignment(
-    roster_entry: ClassRoster,
-    class_assignment: ClassAssignment
-) -> StudentAssignment:
-    """Create or retrieve a StudentAssignment record."""
-    sa, _ = StudentAssignment.get_or_create(
-        roster_entry=roster_entry,
-        class_assignment=class_assignment,
-    )
-    return sa
-
-
-def record_question_score(
-    student_assignment: StudentAssignment,
-    question: AssignmentQuestion,
-    score: float
-) -> StudentAssignmentQuestion:
-    """Record or update a score for a specific question."""
-    saq, _ = StudentAssignmentQuestion.get_or_create(
-        student_assignment=student_assignment,
-        question=question
-    )
-    saq.score = score
-    saq.save()
-    return saq
-
-
-def recompute_total(student_assignment: StudentAssignment) -> float:
-    """Recalculate and update a student's total assignment score."""
-    total = sum((qs.score or 0) for qs in student_assignment.question_scores)
-    student_assignment.total_score = total
-    student_assignment.save()
-    return total
 
 
 def record_full_assignment(
     roster_entry: ClassRoster,
     class_assignment: ClassAssignment,
-    scores_dict: Dict[int, float]
-) -> Tuple[StudentAssignment, float]:
+    question_scores: Dict[int, float],
+) -> StudentAssignmentScore:
     """
-    Record scores for all questions in an assignment.
+    Record a student's score for a full assignment.
 
     Args:
-        roster_entry: The student's roster record.
-        class_assignment: The class-assignment link.
-        scores_dict: {question_id: score}
+        roster_entry: ClassRoster entry for the student.
+        class_assignment: ClassAssignment being scored.
+        question_scores: Dict mapping AssignmentQuestion.id -> score
 
     Returns:
-        (StudentAssignment, total_score)
+        StudentAssignmentScore: The total score recorded.
     """
-    sa = create_student_assignment(roster_entry, class_assignment)
+    total_score = sum(question_scores.values())
+    return StudentAssignmentScore.create(
+        roster_entry=roster_entry,
+        class_assignment=class_assignment,
+        total_score=total_score,
+    )
 
-    for qid, score in scores_dict.items():
-        question = AssignmentQuestion.get_by_id(qid)
-        record_question_score(sa, question, score)
 
-    total = recompute_total(sa)
-    return sa, total
+def set_category_weight(
+    cls: Class, category: str, weight: float
+) -> AssignmentCategoryWeight:
+    """
+    Set the weight for a category in a class.
+
+    Args:
+        cls: Class for which the weight applies.
+        category: "quiz", "test", or "homework".
+        weight: Weight of this category.
+
+    Returns:
+        AssignmentCategoryWeight: The record created.
+    """
+    obj, _ = AssignmentCategoryWeight.get_or_create(
+        class_ref=cls, category=category, defaults={"weight": weight}
+    )
+    obj.weight = weight
+    obj.save()
+    return obj
+
+
+def compute_final_grade(cls_roster_entry: ClassRoster) -> float:
+    """
+    Compute the final weighted grade for a student in a class.
+
+    Args:
+        cls_roster_entry: ClassRoster entry for the student.
+
+    Returns:
+        float: Weighted final grade (0-100)
+    """
+    cls = cls_roster_entry.class_ref
+    weights = {w.category: w.weight for w in AssignmentCategoryWeight.select().where(AssignmentCategoryWeight.class_ref == cls)}
+    total_weight = sum(weights.values())
+    if total_weight == 0:
+        return 0.0
+
+    # Gather all assignments for this student
+    student_scores = StudentAssignmentScore.select().join(ClassRoster).where(ClassRoster.id == cls_roster_entry.id)
+    category_totals: Dict[str, float] = {}
+    category_max: Dict[str, float] = {}
+
+    for score in student_scores:
+        cat = score.class_assignment.assignment.category
+        category_totals[cat] = category_totals.get(cat, 0.0) + score.total_score
+        category_max[cat] = category_max.get(cat, 0.0) + score.class_assignment.total_points
+
+    # Weighted average
+    final_grade = 0.0
+    for cat, weight in weights.items():
+        cat_total = category_totals.get(cat, 0.0)
+        cat_max = category_max.get(cat, 0.0)
+        if cat_max > 0:
+            final_grade += (cat_total / cat_max) * weight
+
+    return final_grade / total_weight * 100
