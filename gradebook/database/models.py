@@ -7,14 +7,14 @@ from peewee import (
     FloatField,
     TextField,
     IntegerField,
-    SQL
+    DateField
 )
-from typing import List, Optional
 
 # Use in-memory database for tests; replace with file path for production
 db = SqliteDatabase(':memory:')
-
-
+# TODO
+#db = SqliteDatabase('gradebook.db')
+ 
 class BaseModel(Model):
     """Base model class for Peewee."""
 
@@ -27,6 +27,8 @@ class Class(BaseModel):
 
     id = AutoField()
     name = CharField(unique=True)
+    start_date = DateField(null=True)
+    end_date = DateField(null=True)
 
 
 class Student(BaseModel):
@@ -87,17 +89,16 @@ class StudentAssignmentScore(BaseModel):
     total_score = FloatField()
     total_time = IntegerField(null=True)  # in seconds, optional
     
-# TODO: Implement this
+
 class StudentQuestionScore(BaseModel):
     """Stores a student's score for each question."""
-    id: int = AutoField()
-    student: Student = ForeignKeyField(Student, backref="question_scores", on_delete="CASCADE")
-    assignment_question: AssignmentQuestion = ForeignKeyField(AssignmentQuestion, backref="student_scores", on_delete="CASCADE")
-    points_scored: float = FloatField()
+    id = AutoField()
+    student = ForeignKeyField(Student, backref="question_scores", on_delete="CASCADE")
+    assignment_question = ForeignKeyField(AssignmentQuestion, backref="student_scores", on_delete="CASCADE")
+    points_scored = FloatField()
 
     class Meta:
         indexes = ((("student", "assignment_question"), True),)
-        constraints = [SQL('UNIQUE(student, assignment_question)')]
 
 
 class AssignmentCategoryWeight(BaseModel):
@@ -107,6 +108,7 @@ class AssignmentCategoryWeight(BaseModel):
     class_ref = ForeignKeyField(Class, backref="category_weights", on_delete="CASCADE")
     category = CharField()  # quiz, test, homework
     weight = FloatField()
+
     class Meta:
         indexes = ((("class_ref", "category"), True),)
 
@@ -121,5 +123,6 @@ db.create_tables([
     AssignmentQuestion,
     ClassAssignment,
     StudentAssignmentScore,
-    AssignmentCategoryWeight
+    AssignmentCategoryWeight,
+    StudentQuestionScore
 ])

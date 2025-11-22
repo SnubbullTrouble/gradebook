@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'class_windowSSIBeh.ui'
+## Form generated from reading UI file 'class_windowwkUZut.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.10.0
 ##
@@ -26,10 +26,10 @@ class Ui_ClassDialog(object):
         ClassDialog.resize(711, 555)
         self.gridLayout = QGridLayout(ClassDialog)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.listWidget = QListWidget(ClassDialog)
-        self.listWidget.setObjectName(u"listWidget")
+        self.lwClassList = QListWidget(ClassDialog)
+        self.lwClassList.setObjectName(u"lwClassList")
 
-        self.gridLayout.addWidget(self.listWidget, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.lwClassList, 0, 0, 1, 1)
 
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setObjectName(u"verticalLayout")
