@@ -82,8 +82,7 @@ class ClassWindow(QtWidgets.QDialog):
         '''
         Sets the selected class based on the current selection in the list widget.
         '''
-        if self._get_class_by_name(self.ui.lwClassList.currentItem().text()):
-            self._selected_class = self._get_class_by_name(self.ui.lwClassList.currentItem().text())
+        self._selected_class = self._get_class_by_name(self.ui.lwClassList.currentItem().text().split(',')[0])
 
     def _update_open_button_state(self) -> None:
         '''

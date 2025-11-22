@@ -58,3 +58,35 @@ def get_number_of_students_in_class(cls: Class) -> int:
         int: Number of students enrolled in the class.
     """
     return ClassRoster.select().where(ClassRoster.class_ref == cls).count()
+
+def get_class_by_id(class_id: int) -> Class | None:
+    """
+    Retrieve a class by its ID.
+
+    Args:
+        class_id (int): ID of the class to retrieve.
+
+    Returns:
+        Class | None: The Class object if found, else None.
+    """
+    return Class.get(Class.id == class_id)
+
+def get_students_in_class(class_id: int) -> list["Student"]:
+    """
+    Retrieve all students enrolled in a specific class.
+
+    Args:
+        class_id: ID of the class.
+
+    Returns:
+        list[Student]: List of Student objects enrolled in the class.
+    """
+    from gradebook.database.models import ClassRoster, Class
+
+    query = (
+        Student.select()
+        .join(ClassRoster)
+        .join(Class)
+        .where(Class.id == class_id)
+    )
+    return list(query)
