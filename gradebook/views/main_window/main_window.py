@@ -1,8 +1,11 @@
+from gradebook.views.main_window.context import Context
+from gradebook.views.main_window.tabs.roster_tab import Roster
 from gradebook.views.main_window.ui_mainwindow import Ui_MainWindow
 from PySide6.QtWidgets import QMainWindow
 from PySide6 import QtWidgets, QtCore
 from gradebook.views.class_window.class_window import ClassWindow
 from gradebook.database.services import classes as class_service
+from gradebook.views.main_window.tabs.tab import Tab
 import typing
 
 if typing.TYPE_CHECKING:
@@ -12,12 +15,11 @@ if typing.TYPE_CHECKING:
 class MainWindow(QMainWindow):
 
     # Signals
-    _fetch_class = QtCore.Signal()
-    _fetch_roster = QtCore.Signal()
     _class_changed = QtCore.Signal()
 
     # UI data
     _unsaved_changes = []
+    _tabs = [Roster]
 
     # Database data
     _selected_roster = None
@@ -33,6 +35,9 @@ class MainWindow(QMainWindow):
         # UI
         self._set_status("Ready")
         self.ui.lClassName.setText("No class selected")
+        self.ui.tabWidget.clear()
+
+        self._create_tab_views()
 
     @property
     def _current_class(self) -> "Class":
@@ -63,32 +68,19 @@ class MainWindow(QMainWindow):
         '''
         Refresh all data tables in the main window.
         '''
-        self._refresh_roster_table()
+        for index in range(self.ui.tabWidget.count()):
+            tab: Tab = self.ui.tabWidget.widget(index)
+            tab.refresh_view.emit()
 
-    def _refresh_roster_table(self) -> None:
+    def _create_tab_views(self) -> None:
         '''
-        Refresh the class roster table.
+        Create and add all tab views to the main window's tab widget.
         '''
-        if self._roster:
-            self.ui.tRoster.setRowCount(len(self._roster))
-            for row, student in enumerate(self._roster):
-                self.ui.tRoster.setItem(row, 0, QtWidgets.QTableWidgetItem(student.student_number))
-                self.ui.tRoster.setItem(row, 1, QtWidgets.QTableWidgetItem(student.last_name))
-                self.ui.tRoster.setItem(row, 2, QtWidgets.QTableWidgetItem(student.first_name))
-        else:
-            self.ui.tRoster.setRowCount(0)
-            self._set_status("No students enrolled in this class.")
+        for tab_class in self._tabs:
+            tab_view = Roster()
+            self.ui.tabWidget.addTab(tab_view, tab_view.name)
 
     # Data Management
-
-    def _fetch_roster_data(self) -> None:
-        '''
-        Load roster data for the selected class.
-        '''
-        try:
-            self._selected_roster = class_service.get_students_in_class(self._current_class.id)
-        except Exception as e:
-            self._set_status(f"Error - Failed to load roster data: {e}")
 
     def _fetch_class_data(self) -> None:
         '''
@@ -127,9 +119,18 @@ class MainWindow(QMainWindow):
         self.ui.actionClasses.triggered.connect(self._open_classes_window)
 
         # Handlers
-
+        
 
         # Signals
         self._class_changed.connect(self._refresh_tables)
         self._fetch_class.connect(self._fetch_class_data)
         self._fetch_roster.connect(self._fetch_roster_data)
+
+    def _add_tab_view(self) -> None:
+        '''
+        Add tab views to the main window's tab widget.
+        '''
+        # Example of adding a tab
+        example_tab = Tab(self.ui.tabWidget, "ExampleTab")
+
+
