@@ -7,8 +7,9 @@ from peewee import (
     FloatField,
     TextField,
     IntegerField,
+    SQL
 )
-from typing import List
+from typing import List, Optional
 
 # Use in-memory database for tests; replace with file path for production
 db = SqliteDatabase(':memory:')
@@ -85,6 +86,18 @@ class StudentAssignmentScore(BaseModel):
     class_assignment = ForeignKeyField(ClassAssignment, backref="scores", on_delete="CASCADE")
     total_score = FloatField()
     total_time = IntegerField(null=True)  # in seconds, optional
+    
+# TODO: Implement this
+class StudentQuestionScore(BaseModel):
+    """Stores a student's score for each question."""
+    id: int = AutoField()
+    student: Student = ForeignKeyField(Student, backref="question_scores", on_delete="CASCADE")
+    assignment_question: AssignmentQuestion = ForeignKeyField(AssignmentQuestion, backref="student_scores", on_delete="CASCADE")
+    points_scored: float = FloatField()
+
+    class Meta:
+        indexes = ((("student", "assignment_question"), True),)
+        constraints = [SQL('UNIQUE(student, assignment_question)')]
 
 
 class AssignmentCategoryWeight(BaseModel):

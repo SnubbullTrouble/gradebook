@@ -1,0 +1,1 @@
+call ".venv\Scripts\pyside6-designer.exe" 
