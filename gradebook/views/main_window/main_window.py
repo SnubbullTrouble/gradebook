@@ -1,4 +1,3 @@
-from gradebook.views.main_window.context import Context
 from gradebook.views.main_window.tabs.roster_tab import Roster
 from gradebook.views.main_window.ui_mainwindow import Ui_MainWindow
 from PySide6.QtWidgets import QMainWindow
@@ -123,8 +122,6 @@ class MainWindow(QMainWindow):
 
         # Signals
         self._class_changed.connect(self._refresh_tables)
-        self._fetch_class.connect(self._fetch_class_data)
-        self._fetch_roster.connect(self._fetch_roster_data)
 
     def _add_tab_view(self) -> None:
         '''
