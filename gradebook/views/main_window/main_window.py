@@ -4,7 +4,11 @@ from PySide6.QtWidgets import QMainWindow
 from PySide6 import QtWidgets, QtCore
 from gradebook.views.class_window.class_window import ClassWindow
 from gradebook.database.services import classes as class_service
+from gradebook.database.services import students as student_service
 from gradebook.views.main_window.tabs.tab import Tab
+from gradebook.database.models import Student
+from gradebook.views.dialogs.new_student import NewStudentDialog
+from gradebook.views.dialogs.data_verification import DataVerificationDialog
 import typing
 
 if typing.TYPE_CHECKING:
@@ -12,6 +16,8 @@ if typing.TYPE_CHECKING:
 
 
 class MainWindow(QMainWindow):
+    # Settings
+    _show_verification_dialog = True
 
     # Signals
     _class_changed = QtCore.Signal()
@@ -69,6 +75,7 @@ class MainWindow(QMainWindow):
         '''
         for index in range(self.ui.tabWidget.count()):
             tab: Tab = self.ui.tabWidget.widget(index)
+            tab.fetch_data.emit(self._current_class)
             tab.refresh_view.emit()
 
     def _create_tab_views(self) -> None:
@@ -76,19 +83,54 @@ class MainWindow(QMainWindow):
         Create and add all tab views to the main window's tab widget.
         '''
         for tab_class in self._tabs:
-            tab_view = Roster()
+            tab_view = tab_class()
             self.ui.tabWidget.addTab(tab_view, tab_view.name)
 
     # Data Management
 
-    def _fetch_class_data(self) -> None:
+    def _add_student_clicked(self) -> None:
         '''
-        Load data for the selected class.
+        Handler for adding a new student to the current class.
         '''
-        try:
-            self._current_class = class_service.get_class_by_id(self._selected_class.id)
-        except Exception as e:
-            self._set_status(f"Error - Failed to load class data: {e}")
+        if self._current_class:
+            dialog = NewStudentDialog(self)
+            dialog.exec()
+
+            if dialog.result() == QtWidgets.QDialog.Accepted:
+                data = dialog.ui.tbRoster.toPlainText().strip().splitlines()
+                table = [line.replace(" ", "").split(",") for line in data if line.strip()]
+
+                # Confirm
+                if self._show_verification_dialog:
+                    verification_dialog = DataVerificationDialog(table, self)
+                    verification_dialog.exec()
+
+                    if verification_dialog.result() != QtWidgets.QDialog.Accepted:
+                        self._set_status("Student addition cancelled.")
+                        return
+                    
+                # Add students
+                for row in table:
+                    try:
+                        new_student_record = student_service.create_student(student_number=row[0], last_name=row[1], first_name=row[2])
+                        roster = class_service.enroll_student(self._current_class, new_student_record)
+                        status = "added" if new_student_record == roster.student else "not added"
+                        self._set_status(f"{roster.student.last_name}, {roster.student.first_name} {status} to class {self._current_class.name}.")
+                    except Exception as e:
+                        if "UNIQUE" in str(e):
+                            field = str(e).split(".")[1]
+                            self._set_status(f"Field {field} must be unique. Student {row[1]}, {row[2]} not added.")
+                        else:
+                            QtWidgets.QMessageBox.warning(self, "Error Adding Student", f"An error occurred while adding student: {str(e)}")
+
+            else:
+                self._set_status("Student addition cancelled.")
+        else:
+            self._set_status("No class selected. Cannot add student.")
+
+        # Refresh view
+        self.ui.tabWidget.currentWidget().fetch_data.emit(self._current_class)
+        self.ui.tabWidget.currentWidget().refresh_view.emit()
 
 
     # UI Management
@@ -118,7 +160,7 @@ class MainWindow(QMainWindow):
         self.ui.actionClasses.triggered.connect(self._open_classes_window)
 
         # Handlers
-        
+        self.ui.bAdd.clicked.connect(self._bAdd_clicked)
 
         # Signals
         self._class_changed.connect(self._refresh_tables)
@@ -129,5 +171,12 @@ class MainWindow(QMainWindow):
         '''
         # Example of adding a tab
         example_tab = Tab(self.ui.tabWidget, "ExampleTab")
+
+    def _bAdd_clicked(self) -> None:
+        '''
+        Handler for the Add button click event.
+        '''
+        if self.ui.tabWidget.currentWidget().name == Roster.__name__:
+            self._add_student_clicked()
 
 

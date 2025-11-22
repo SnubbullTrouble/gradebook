@@ -51,6 +51,13 @@ class Tab(QtWidgets.QWidget):
         Abstract property to get the name of the tab.
         '''
         return type(self).__name__
+    
+    @property
+    def table_widget(self) -> QtWidgets.QTableWidget:
+        '''
+        Property to get the table widget.
+        '''
+        return self._tableWidget
 
     def _create_view(self) -> None:
         '''
@@ -60,12 +67,12 @@ class Tab(QtWidgets.QWidget):
         self.setObjectName(u"tab" + self.name)
 
         # Add a layout to my view
-        self.gridLayout = QtWidgets.QGridLayout(self)
-        self.gridLayout.setObjectName(u"gridLayout")
+        self._gridLayout = QtWidgets.QGridLayout(self)
+        self._gridLayout.setObjectName(u"gridLayout")
 
         # Add a table widget to my view
-        self.tableWidget = QtWidgets.QTableWidget(self)
-        self.tableWidget.setObjectName(u"tableWidget")
+        self._tableWidget = QtWidgets.QTableWidget(self)
+        self._tableWidget.setObjectName(u"tableWidget")
 
         # Add the table widget to the layout
-        self.gridLayout.addWidget(self.tableWidget, 0, 0, 1, 1)
+        self._gridLayout.addWidget(self._tableWidget, 0, 0, 1, 1)

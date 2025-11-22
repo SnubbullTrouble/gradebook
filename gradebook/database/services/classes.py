@@ -1,10 +1,7 @@
 from typing import TYPE_CHECKING
 from peewee import IntegrityError
-from gradebook.database.models import Class, ClassRoster
+from gradebook.database.models import Class, ClassRoster, Student
 from datetime import datetime
-
-if TYPE_CHECKING:
-    from models import Student, ClassRoster
 
 def create_class(name: str, start_date: datetime, end_date: datetime) -> Class:
     """
@@ -24,7 +21,7 @@ def create_class(name: str, start_date: datetime, end_date: datetime) -> Class:
 
 def enroll_student(cls: Class, student: "Student") -> ClassRoster:
     """
-    Enroll a student in a class.
+    Enroll an existing student in an existing class.
 
     Args:
         cls: Class to enroll the student in.
