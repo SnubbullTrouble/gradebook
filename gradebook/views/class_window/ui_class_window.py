@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'classeswOfoJB.ui'
+## Form generated from reading UI file 'class_windowSSIBeh.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.10.0
 ##
@@ -19,21 +19,21 @@ from PySide6.QtWidgets import (QApplication, QDialog, QGridLayout, QListWidget,
     QListWidgetItem, QPushButton, QSizePolicy, QSpacerItem,
     QVBoxLayout, QWidget)
 
-class Ui_classDialog(object):
-    def setupUi(self, classDialog):
-        if not classDialog.objectName():
-            classDialog.setObjectName(u"classDialog")
-        classDialog.resize(711, 555)
-        self.gridLayout = QGridLayout(classDialog)
+class Ui_ClassDialog(object):
+    def setupUi(self, ClassDialog):
+        if not ClassDialog.objectName():
+            ClassDialog.setObjectName(u"ClassDialog")
+        ClassDialog.resize(711, 555)
+        self.gridLayout = QGridLayout(ClassDialog)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.listWidget = QListWidget(classDialog)
+        self.listWidget = QListWidget(ClassDialog)
         self.listWidget.setObjectName(u"listWidget")
 
         self.gridLayout.addWidget(self.listWidget, 0, 0, 1, 1)
 
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.bNew = QPushButton(classDialog)
+        self.bNew = QPushButton(ClassDialog)
         self.bNew.setObjectName(u"bNew")
 
         self.verticalLayout.addWidget(self.bNew)
@@ -42,7 +42,7 @@ class Ui_classDialog(object):
 
         self.verticalLayout.addItem(self.verticalSpacer)
 
-        self.bOpen = QPushButton(classDialog)
+        self.bOpen = QPushButton(ClassDialog)
         self.bOpen.setObjectName(u"bOpen")
 
         self.verticalLayout.addWidget(self.bOpen)
@@ -51,14 +51,14 @@ class Ui_classDialog(object):
         self.gridLayout.addLayout(self.verticalLayout, 0, 1, 1, 1)
 
 
-        self.retranslateUi(classDialog)
+        self.retranslateUi(ClassDialog)
 
-        QMetaObject.connectSlotsByName(classDialog)
+        QMetaObject.connectSlotsByName(ClassDialog)
     # setupUi
 
-    def retranslateUi(self, classDialog):
-        classDialog.setWindowTitle(QCoreApplication.translate("classDialog", u"Classes", None))
-        self.bNew.setText(QCoreApplication.translate("classDialog", u"New", None))
-        self.bOpen.setText(QCoreApplication.translate("classDialog", u"Load", None))
+    def retranslateUi(self, ClassDialog):
+        ClassDialog.setWindowTitle(QCoreApplication.translate("ClassDialog", u"Classes", None))
+        self.bNew.setText(QCoreApplication.translate("ClassDialog", u"New", None))
+        self.bOpen.setText(QCoreApplication.translate("ClassDialog", u"Load", None))
     # retranslateUi
 
