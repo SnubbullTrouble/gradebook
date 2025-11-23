@@ -128,8 +128,7 @@ class MainWindow(QMainWindow):
                             QtWidgets.QMessageBox.warning(self, "Error Adding Student", f"An error occurred while adding student: {str(e)}")
 
                 # Refresh view
-                self.ui.tabWidget.currentWidget().fetch_data.emit(self._current_class)
-                self.ui.tabWidget.currentWidget().refresh_view.emit()
+                self._refresh_tables()
 
             else:
                 self._set_status("Student addition cancelled.")
@@ -146,13 +145,19 @@ class MainWindow(QMainWindow):
 
             if dialog.result() == QtWidgets.QDialog.Accepted:
                 # Get the assignment data
-                questions = [assignment_service.Question(r.d, r.p) for r in dialog.questions]
+                questions = [assignment_service.Question(r.description, r.points) for r in dialog.questions]
 
                 # Create a new record with the assignment data
                 new_assignment_record = assignment_service.create_assignment(dialog.assignment_name, dialog.total_points, questions)
 
                 # Link the assignment to the existing class
                 assignment_service.assign_to_class(self._selected_class, new_assignment_record)
+
+                self._refresh_tables()
+            else:
+                self._set_status("Cancelling assignment addition.")
+        else:
+            self._set_status("Cannot add assignment to class. No class selected.")
 
     # UI Management
 
@@ -186,13 +191,6 @@ class MainWindow(QMainWindow):
         # Signals
         self._class_changed.connect(self._refresh_tables)
 
-    def _add_tab_view(self) -> None:
-        '''
-        Add tab views to the main window's tab widget.
-        '''
-        # Example of adding a tab
-        example_tab = Tab(self.ui.tabWidget, "ExampleTab")
-
     def _bAdd_clicked(self) -> None:
         '''
         Handler for the Add button click event.
@@ -205,6 +203,5 @@ class MainWindow(QMainWindow):
             case _:
                 raise InvalidTabError(self.ui.tabWidget.currentWidget().name)
             
-        # Update the views
-        self._refresh_tables()
+
 

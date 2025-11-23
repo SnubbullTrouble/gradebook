@@ -22,6 +22,9 @@ class ObservableList(list):
         if self.callback:
             self.callback()
 
+    def clear(self) -> None:
+        super().clear()
+
 class AssignmentWindow(QtWidgets.QDialog):
 
     _rows: ObservableList[Row] = ObservableList()
@@ -39,9 +42,11 @@ class AssignmentWindow(QtWidgets.QDialog):
         # Signals
         self.ui.bAdd.clicked.connect(self._bAdd_clicked)
         self.ui.tableWidget.currentCellChanged.connect(self._set_bSave_enable)
+        self.ui.buttonBox.buttons()[0].clicked.connect(self._read_table_widget_data)
+        self.ui.tbName.textChanged.connect(self._read_table_widget_data)
 
         # Callback
-        self._rows.callback = self._refresh_table_view()
+        self._rows.callback = self._refresh_table_view
 
     @property
     def questions(self) -> list[Row]:
@@ -60,7 +65,7 @@ class AssignmentWindow(QtWidgets.QDialog):
         '''Total points of the assignment'''
         return sum([r.points for r in self.questions])
 
-    def _load_Assignement(self) -> None:
+    def _load_Assignment(self) -> None:
         raise NotImplementedError("Assignment Loader not implemented")
 
     def _bAdd_clicked(self) -> None:
@@ -73,7 +78,8 @@ class AssignmentWindow(QtWidgets.QDialog):
         '''
         Enables the Save button
         '''
-        self.ui.buttonBox.buttons()[0].setEnabled(True)
+        if len(self.ui.tbName.text().strip()) > 0 and self.ui.tableWidget.rowCount() > 0:
+            self.ui.buttonBox.buttons()[0].setEnabled(True)
 
     def _refresh_table_view(self) -> None:
         '''
@@ -87,4 +93,13 @@ class AssignmentWindow(QtWidgets.QDialog):
             self.ui.tableWidget.insertRow(index)
             self.ui.tableWidget.setItem(index, 0, (QtWidgets.QTableWidgetItem(row.description)))
             self.ui.tableWidget.setItem(index, 0, (QtWidgets.QTableWidgetItem(row.points)))
+
+    def _read_table_widget_data(self) -> None:
+        '''
+        Gets the typed data out of the table and puts it in the rows collection
+        '''
+        self._rows.clear()
+        for index in range(self.ui.tableWidget.rowCount()):
+            self._rows.append(Row(self.ui.tableWidget.item(index, 0).text(), int(self.ui.tableWidget.item(index, 1).text())))
+
 
