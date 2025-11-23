@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
 
     # UI data
     _unsaved_changes = []
-    _tabs = [Roster, Homework]
+    _tabs = [Roster, ]#Homework]
 
     # Database data
     _selected_roster = None

@@ -22,6 +22,11 @@ class Roster(Tab):
         Property to get the roster data.
         '''
         return self._roster_data
+    
+    @property
+    def _headers(self) -> None:
+        '''Headers for the View'''
+        return ["Student Number", "Last Name", "First Name"]
 
     def on_save_data(self) -> None:
         '''
@@ -31,20 +36,17 @@ class Roster(Tab):
 
     def on_fetch_data(self, model: "Class") -> None:
         '''
-        Slot to handle data fetching.
+        Fetches data from the database and holds caches it.
         '''
         self._roster_data = class_service.get_students_in_class(model.id)
 
     def on_refresh_view(self) -> list["Student"]:
         '''
-        Slot to handle view refreshing.
+        Updates the model with fetched data.
         '''
-        self.table_widget.setRowCount(0)
-        self.table_widget.setColumnCount(3)
-        self.table_widget.setHorizontalHeaderLabels(["Student Number", "Last Name", "First Name"])
+        # Clear the model
+        self._data_model.removeRows(0, self._data_model.rowCount())
+
+        # Add the rows from the cache
         for student in self._roster_data:
-            index = self.table_widget.rowCount()
-            self.table_widget.insertRow(index)
-            self.table_widget.setItem(index, 0, (QtWidgets.QTableWidgetItem(student.student_number)))
-            self.table_widget.setItem(index, 1, (QtWidgets.QTableWidgetItem(student.last_name)))
-            self.table_widget.setItem(index, 2, (QtWidgets.QTableWidgetItem(student.first_name)))
+            self._add_row_to_model([student.student_number, student.last_name, student.first_name])

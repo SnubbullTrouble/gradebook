@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore, QtGui
 from gradebook.database.models import BaseModel
 
 class Tab(QtWidgets.QWidget):
@@ -16,13 +16,22 @@ class Tab(QtWidgets.QWidget):
         Initialize the Tab with a reference to the main window.
         '''
         super().__init__()
-        # Create the view
-        self._create_view()
 
         # Connect signals
         self.fetch_data.connect(self.on_fetch_data)
         self.refresh_view.connect(self.on_refresh_view)
         self.save_data.connect(self.on_save_data)
+
+        # Connect Model
+        self._data_model = QtGui.QStandardItemModel()
+
+        # Create the view
+        self._create_view()
+
+    @property
+    @abstractmethod
+    def _headers(self) -> None:
+        pass
 
     @abstractmethod
     def on_save_data(self) -> None:
@@ -34,30 +43,23 @@ class Tab(QtWidgets.QWidget):
     @abstractmethod
     def on_fetch_data(self, model: BaseModel) -> None:
         '''
-        Slot to handle data fetching.
+        Fetches data from the database and holds caches it.
         '''
         raise NotImplementedError("Subclasses must implement on_fetch_data method.")
 
     @abstractmethod
     def on_refresh_view(self) -> None:
         '''
-        Slot to handle view refreshing.
+        Updates the model with fetched data.
         '''
         raise NotImplementedError("Subclasses must implement on_refresh_view method.")
-
+    
     @property
     def name(self) -> str:
         '''
         Abstract property to get the name of the tab.
         '''
-        return type(self).__name__
-    
-    @property
-    def table_widget(self) -> QtWidgets.QTableWidget:
-        '''
-        Property to get the table widget.
-        '''
-        return self._tableWidget
+        return type(self).__name__       
 
     def _create_view(self) -> None:
         '''
@@ -70,9 +72,22 @@ class Tab(QtWidgets.QWidget):
         self._gridLayout = QtWidgets.QGridLayout(self)
         self._gridLayout.setObjectName(u"gridLayout")
 
-        # Add a table widget to my view
-        self._tableWidget = QtWidgets.QTableWidget(self)
-        self._tableWidget.setObjectName(u"tableWidget")
+        # Model Headers
+        self._data_model.setHorizontalHeaderLabels(self._headers)
 
-        # Add the table widget to the layout
-        self._gridLayout.addWidget(self._tableWidget, 0, 0, 1, 1)
+        # Add a table view to my view
+        self._tableView = QtWidgets.QTableView(self)
+        self._tableView.setObjectName(u"tableWidget")
+        self._tableView.setModel(self._data_model)
+
+        # Add the table view to the layout
+        self._gridLayout.addWidget(self._tableView, 0, 0, 1, 1)
+
+    def _add_row_to_model(self, row_values: list[str]) -> None:
+        '''
+        Adds a new row to the model with the row values.
+        
+        Args:
+            row_values (list[str]): the values to add to the model
+        '''
+        self._data_model.appendRow([QtGui.QStandardItem(str(v)) for v in row_values])
