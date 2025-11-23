@@ -16,6 +16,13 @@ class NewStudentDialog(QDialog):
         # Handlers
         self.ui.tbRoster.textChanged.connect(self._on_text_changed)
 
+    @property
+    def rows(self) -> list[str]:
+        '''
+        The rows in the student dialog
+        ''' 
+        return self.ui.tbRoster.toPlainText().strip().splitlines()
+
     def _on_text_changed(self) -> None:
         '''
         Enable or disable the OK button based on whether there is text in the textbox.

@@ -1,3 +1,6 @@
+from gradebook.views.assignment_window.assignment_window import AssignmentWindow
+from gradebook.views.main_window.errors import InvalidTabError
+from gradebook.views.main_window.tabs.homework_tab import Homework
 from gradebook.views.main_window.tabs.roster_tab import Roster
 from gradebook.views.main_window.ui_mainwindow import Ui_MainWindow
 from PySide6.QtWidgets import QMainWindow
@@ -5,6 +8,7 @@ from PySide6 import QtWidgets, QtCore
 from gradebook.views.class_window.class_window import ClassWindow
 from gradebook.database.services import classes as class_service
 from gradebook.database.services import students as student_service
+from gradebook.database.services import assignments as assignment_service
 from gradebook.views.main_window.tabs.tab import Tab
 from gradebook.database.models import Student
 from gradebook.views.dialogs.new_student import NewStudentDialog
@@ -24,7 +28,7 @@ class MainWindow(QMainWindow):
 
     # UI data
     _unsaved_changes = []
-    _tabs = [Roster]
+    _tabs = [Roster, Homework]
 
     # Database data
     _selected_roster = None
@@ -92,12 +96,12 @@ class MainWindow(QMainWindow):
         '''
         Handler for adding a new student to the current class.
         '''
-        if self._current_class:
+        if self._current_class is not None:
             dialog = NewStudentDialog(self)
             dialog.exec()
 
             if dialog.result() == QtWidgets.QDialog.Accepted:
-                data = dialog.ui.tbRoster.toPlainText().strip().splitlines()
+                data = dialog.rows
                 table = [line.replace(" ", "").split(",") for line in data if line.strip()]
 
                 # Confirm
@@ -123,15 +127,32 @@ class MainWindow(QMainWindow):
                         else:
                             QtWidgets.QMessageBox.warning(self, "Error Adding Student", f"An error occurred while adding student: {str(e)}")
 
+                # Refresh view
+                self.ui.tabWidget.currentWidget().fetch_data.emit(self._current_class)
+                self.ui.tabWidget.currentWidget().refresh_view.emit()
+
             else:
                 self._set_status("Student addition cancelled.")
         else:
             self._set_status("No class selected. Cannot add student.")
 
-        # Refresh view
-        self.ui.tabWidget.currentWidget().fetch_data.emit(self._current_class)
-        self.ui.tabWidget.currentWidget().refresh_view.emit()
+    def _add_assignment_clicked(self) -> None:
+        '''
+        Opens the assignment window for adding an assignment
+        '''
+        if self._selected_class is not None:
+            dialog = AssignmentWindow()
+            dialog.exec()
 
+            if dialog.result() == QtWidgets.QDialog.Accepted:
+                # Get the assignment data
+                questions = [assignment_service.Question(r.d, r.p) for r in dialog.questions]
+
+                # Create a new record with the assignment data
+                new_assignment_record = assignment_service.create_assignment(dialog.assignment_name, dialog.total_points, questions)
+
+                # Link the assignment to the existing class
+                assignment_service.assign_to_class(self._selected_class, new_assignment_record)
 
     # UI Management
 
@@ -176,7 +197,14 @@ class MainWindow(QMainWindow):
         '''
         Handler for the Add button click event.
         '''
-        if self.ui.tabWidget.currentWidget().name == Roster.__name__:
-            self._add_student_clicked()
-
+        match self.ui.tabWidget.currentWidget().name:
+            case Roster.__name__:
+                self._add_student_clicked()
+            case Homework.__name__:
+                self._add_assignment_clicked()
+            case _:
+                raise InvalidTabError(self.ui.tabWidget.currentWidget().name)
+            
+        # Update the views
+        self._refresh_tables()
 

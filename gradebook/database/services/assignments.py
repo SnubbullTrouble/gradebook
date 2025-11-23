@@ -1,9 +1,18 @@
+import dataclasses
 from typing import List
 from peewee import IntegrityError
-from gradebook.database.models import Assignment, AssignmentQuestion, ClassAssignment, Class
+from gradebook.database.models import Assignment, AssignmentQuestion, ClassAssignment
+import typing
 
+if typing.TYPE_CHECKING:
+    from gradebook.database.models import Class, Student
 
-def create_assignment(title: str, category: str, question_points: List[float]) -> Assignment:
+@dataclasses.dataclass
+class Question:
+    question: str
+    points: int
+
+def create_assignment(title: str, category: str, questions: List[Question]) -> Assignment:
     """
     Create an assignment with multiple questions.
 
@@ -16,15 +25,15 @@ def create_assignment(title: str, category: str, question_points: List[float]) -
         Assignment: The created Assignment object.
     """
     assignment = Assignment.create(title=title, category=category)
-    for idx, points in enumerate(question_points, start=1):
+    for q in questions:
         AssignmentQuestion.create(
             assignment=assignment,
-            text=f"Question {idx}",
-            point_value=points
+            text=q.question,
+            point_value=q.points
         )
     return assignment
 
-def assign_to_class(cls: Class, assignment: Assignment) -> ClassAssignment:
+def assign_to_class(cls: "Class", assignment: Assignment) -> ClassAssignment:
     """
     Assign an assignment template to a class.
 
@@ -48,4 +57,9 @@ def assign_to_class(cls: Class, assignment: Assignment) -> ClassAssignment:
         assignment=assignment,
         total_points=total_points
     )
+
+def get_assignments_for_class(class_id: int) -> list[object]:
+    pass #ClassAssignment.select()
+
+#def get_student_assignment_scores(student: "Student", assignment_type: str) -> list[Assignment]:
 

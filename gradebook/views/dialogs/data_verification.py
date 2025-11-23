@@ -6,12 +6,13 @@ class DataVerificationDialog(QtWidgets.QDialog):
     Dialog for verifying data before importing.
     '''
 
-    def __init__(self, data_table: list[list[str]], parent: QtWidgets.QWidget | None = None) -> None:
+    def __init__(self, data_table: list[list[str]], table_headers: list[str] = None, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.ui = Ui_DataVerificationDialog()
         self.ui.setupUi(self)
         self.setModal(True)
         self._data_table = data_table
+        self._table_headers = table_headers
 
         self._fill_table()
 
@@ -21,6 +22,9 @@ class DataVerificationDialog(QtWidgets.QDialog):
         '''
         self.ui.tableWidget.setRowCount(len(self._data_table))
         self.ui.tableWidget.setColumnCount(len(self._data_table[0]) if self._data_table else 0)
+
+        if self._table_headers:
+            self.ui.tableWidget.setHorizontalHeaderLabels(self._table_headers)
 
         for row_idx, row in enumerate(self._data_table):
             for col_idx, cell in enumerate(row):

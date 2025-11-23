@@ -78,8 +78,6 @@ def get_students_in_class(class_id: int) -> list["Student"]:
     Returns:
         list[Student]: List of Student objects enrolled in the class.
     """
-    from gradebook.database.models import ClassRoster, Class
-
     query = (
         Student.select()
         .join(ClassRoster)

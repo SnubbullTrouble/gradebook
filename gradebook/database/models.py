@@ -11,9 +11,9 @@ from peewee import (
 )
 
 # Use in-memory database for tests; replace with file path for production
-db = SqliteDatabase(':memory:')
+# db = SqliteDatabase(':memory:')
 # TODO
-#db = SqliteDatabase('gradebook.db')
+db = SqliteDatabase('gradebook.db')
  
 class BaseModel(Model):
     """Base model class for Peewee."""
