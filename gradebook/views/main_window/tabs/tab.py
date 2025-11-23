@@ -22,16 +22,8 @@ class Tab(QtWidgets.QWidget):
         self.refresh_view.connect(self.on_refresh_view)
         self.save_data.connect(self.on_save_data)
 
-        # Connect Model
-        self._data_model = QtGui.QStandardItemModel()
-
         # Create the view
         self._create_view()
-
-    @property
-    @abstractmethod
-    def _headers(self) -> None:
-        pass
 
     @abstractmethod
     def on_save_data(self) -> None:
@@ -63,31 +55,8 @@ class Tab(QtWidgets.QWidget):
 
     def _create_view(self) -> None:
         '''
-        Add a table view to the tab.
+        Add a view to the tab.
         '''
-        # Set my name
-        self.setObjectName(u"tab" + self.name)
+        pass
 
-        # Add a layout to my view
-        self._gridLayout = QtWidgets.QGridLayout(self)
-        self._gridLayout.setObjectName(u"gridLayout")
-
-        # Model Headers
-        self._data_model.setHorizontalHeaderLabels(self._headers)
-
-        # Add a table view to my view
-        self._tableView = QtWidgets.QTableView(self)
-        self._tableView.setObjectName(u"tableWidget")
-        self._tableView.setModel(self._data_model)
-
-        # Add the table view to the layout
-        self._gridLayout.addWidget(self._tableView, 0, 0, 1, 1)
-
-    def _add_row_to_model(self, row_values: list[str]) -> None:
-        '''
-        Adds a new row to the model with the row values.
         
-        Args:
-            row_values (list[str]): the values to add to the model
-        '''
-        self._data_model.appendRow([QtGui.QStandardItem(str(v)) for v in row_values])
