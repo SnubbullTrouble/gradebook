@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'assignment_windowNhUDET.ui'
+## Form generated from reading UI file 'assignment_windowlTBank.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.10.0
 ##
@@ -18,7 +18,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QAbstractButton, QApplication, QDialog, QDialogButtonBox,
     QGridLayout, QHBoxLayout, QHeaderView, QLabel,
     QLineEdit, QPushButton, QSizePolicy, QSpacerItem,
-    QTableWidget, QTableWidgetItem, QWidget)
+    QTableView, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -42,18 +42,6 @@ class Ui_Dialog(object):
 
         self.gridLayout.addLayout(self.horizontalLayout_2, 1, 0, 1, 1)
 
-        self.tableWidget = QTableWidget(Dialog)
-        self.tableWidget.setObjectName(u"tableWidget")
-
-        self.gridLayout.addWidget(self.tableWidget, 3, 0, 1, 1)
-
-        self.buttonBox = QDialogButtonBox(Dialog)
-        self.buttonBox.setObjectName(u"buttonBox")
-        self.buttonBox.setOrientation(Qt.Orientation.Horizontal)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Save)
-
-        self.gridLayout.addWidget(self.buttonBox, 4, 0, 1, 1)
-
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
@@ -73,6 +61,18 @@ class Ui_Dialog(object):
 
 
         self.gridLayout.addLayout(self.horizontalLayout, 2, 0, 1, 1)
+
+        self.buttonBox = QDialogButtonBox(Dialog)
+        self.buttonBox.setObjectName(u"buttonBox")
+        self.buttonBox.setOrientation(Qt.Orientation.Horizontal)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Save)
+
+        self.gridLayout.addWidget(self.buttonBox, 4, 0, 1, 1)
+
+        self.tableView = QTableView(Dialog)
+        self.tableView.setObjectName(u"tableView")
+
+        self.gridLayout.addWidget(self.tableView, 3, 0, 1, 1)
 
 
         self.retranslateUi(Dialog)

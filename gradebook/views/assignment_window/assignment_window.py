@@ -1,33 +1,14 @@
 import dataclasses
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtGui
 from gradebook.views.assignment_window.ui_assignment_window import Ui_Dialog
 import typing
 
 if typing.TYPE_CHECKING:
     from gradebook.database.models import Assignment
 
-@dataclasses.dataclass
-class Row:
-    description: str
-    points: int
-
-class ObservableList(list):
-    callback: typing.Callable = None
-
-    def __init__(self):
-        super().__init__()
-
-    def append(self, item: any) -> None:
-        super().append(item)
-        if self.callback:
-            self.callback()
-
-    def clear(self) -> None:
-        super().clear()
-
 class AssignmentWindow(QtWidgets.QDialog):
 
-    _rows: ObservableList[Row] = ObservableList()
+    _data_model = QtGui.QStandardItemModel()
 
     def __init__(self, parent: QtWidgets.QMainWindow = None, selected_assignment: "Assignment" = None):
         super().__init__(parent)
@@ -40,18 +21,17 @@ class AssignmentWindow(QtWidgets.QDialog):
         self.ui.buttonBox.buttons()[0].setEnabled(False)
 
         # Signals
-        self.ui.bAdd.clicked.connect(self._bAdd_clicked)
-        self.ui.tableWidget.currentCellChanged.connect(self._set_bSave_enable)
-        self.ui.buttonBox.buttons()[0].clicked.connect(self._read_table_widget_data)
-        self.ui.tbName.textChanged.connect(self._read_table_widget_data)
+        self.ui.bAdd.clicked.connect(self._add_row_to_model)
+        self._data_model.dataChanged.connect(self._set_bSave_enable)
+        self.ui.tbName.textChanged.connect(self._set_bSave_enable)
 
-        # Callback
-        self._rows.callback = self._refresh_table_view
+        # Connect Model
+        self._connect_model()
 
     @property
-    def questions(self) -> list[Row]:
+    def questions(self) -> list[tuple[str, int]]:
         '''The rows in the table.'''
-        return self._rows
+        return self._get_rows_as_tuples()
     
     @property
     def assignment_name(self) -> str:
@@ -63,43 +43,72 @@ class AssignmentWindow(QtWidgets.QDialog):
     @property
     def total_points(self) -> int:
         '''Total points of the assignment'''
-        return sum([r.points for r in self.questions])
-
+        return self._get_total_points_value()
+    
+    def _connect_model(self) -> None:
+        '''Connect the model to the table and set the headers'''
+        self._data_model.setHorizontalHeaderLabels(["Description", "Points"])
+        self.ui.tableView.setModel(self._data_model)
+        
     def _load_Assignment(self) -> None:
         raise NotImplementedError("Assignment Loader not implemented")
-
-    def _bAdd_clicked(self) -> None:
-        '''
-        Adds a new question when the Add button is clicked
-        '''
-        self._rows.append(Row("", ""))
 
     def _set_bSave_enable(self) -> None:
         '''
         Enables the Save button
         '''
-        if len(self.ui.tbName.text().strip()) > 0 and self.ui.tableWidget.rowCount() > 0:
+        if len(self.ui.tbName.text().strip()) > 0 and self._data_model.rowCount() > 0:
             self.ui.buttonBox.buttons()[0].setEnabled(True)
 
-    def _refresh_table_view(self) -> None:
+    def _add_row_to_model(self, description: str = "", points: str = "") -> None:
         '''
-        Updates the table view with the current question list
-        '''
-        self.ui.tableWidget.setRowCount(0)
-        self.ui.tableWidget.setColumnCount(2)
-        self.ui.tableWidget.setHorizontalHeaderLabels(["Description", "Points"])
-        for row in self.questions:
-            index = self.ui.tableWidget.rowCount()
-            self.ui.tableWidget.insertRow(index)
-            self.ui.tableWidget.setItem(index, 0, (QtWidgets.QTableWidgetItem(row.description)))
-            self.ui.tableWidget.setItem(index, 0, (QtWidgets.QTableWidgetItem(row.points)))
+        Adds the data to the model as a new row.
 
-    def _read_table_widget_data(self) -> None:
+        Args:
+            description (str): question description
+            points (int): point value of the question
         '''
-        Gets the typed data out of the table and puts it in the rows collection
+        self._data_model.appendRow([QtGui.QStandardItem(description), QtGui.QStandardItem(points)])
+
+    def _get_rows_as_tuples(self) -> list[tuple[str, int]]:
         '''
-        self._rows.clear()
-        for index in range(self.ui.tableWidget.rowCount()):
-            self._rows.append(Row(self.ui.tableWidget.item(index, 0).text(), int(self.ui.tableWidget.item(index, 1).text())))
+        Gets the table data in a parsable format
+        
+        Returns:
+            list[tuple[str, int]]: the description and points values for each question
+        '''
+        model = self._data_model
+        rows = model.rowCount()
+        cols = model.columnCount()
 
+        result = []
 
+        for r in range(rows):
+            # build a tuple of column values for this row
+            row_tuple = tuple(
+                model.item(r, c).text() if model.item(r, c) else None
+                for c in range(cols)
+            )
+            result.append(row_tuple)
+
+        return result
+    
+    def _get_total_points_value(self) -> None:
+        '''
+        Gets the total value of the assignment.
+
+        Returns:
+            int: the total points value
+        '''
+        total = 0
+
+        for row in range(self._data_model.rowCount()):
+            item = self._data_model.item(row, 1)
+            if item:
+                try:
+                    value = int(item.text())  # convert text to number
+                    total += value
+                except ValueError:
+                    pass  # ignore non-numeric cells
+
+        return total

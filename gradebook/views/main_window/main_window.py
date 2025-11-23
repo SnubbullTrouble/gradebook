@@ -145,7 +145,7 @@ class MainWindow(QMainWindow):
 
             if dialog.result() == QtWidgets.QDialog.Accepted:
                 # Get the assignment data
-                questions = [assignment_service.Question(r.description, r.points) for r in dialog.questions]
+                questions = [assignment_service.Question(q, p) for (q, p) in dialog.questions]
 
                 # Create a new record with the assignment data
                 new_assignment_record = assignment_service.create_assignment(dialog.assignment_name, dialog.total_points, questions)
