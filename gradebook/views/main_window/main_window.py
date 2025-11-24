@@ -16,7 +16,7 @@ from gradebook.views.dialogs.data_verification import DataVerificationDialog
 import typing
 
 if typing.TYPE_CHECKING:
-    from gradebook.database.models import Class, Student
+    from gradebook.database.models import Class
 
 
 class MainWindow(QMainWindow):
@@ -106,7 +106,8 @@ class MainWindow(QMainWindow):
 
                 # Confirm
                 if self._show_verification_dialog:
-                    verification_dialog = DataVerificationDialog(table, self)
+                    roster_tab: Roster = self.ui.tabWidget.currentWidget()
+                    verification_dialog = DataVerificationDialog(table, roster_tab.headers, self)
                     verification_dialog.exec()
 
                     if verification_dialog.result() != QtWidgets.QDialog.Accepted:

@@ -25,7 +25,7 @@ class Roster(Tab):
         return self._roster_data
     
     @property
-    def _headers(self) -> None:
+    def headers(self) -> None:
         '''Headers for the View'''
         return ["Student Number", "Last Name", "First Name"]
 
@@ -64,7 +64,7 @@ class Roster(Tab):
         self._gridLayout.setObjectName(u"gridLayout")
 
         # Model Headers
-        self._data_model.setHorizontalHeaderLabels(self._headers)
+        self._data_model.setHorizontalHeaderLabels(self.headers)
 
         # Add a table view to my view
         self._tableView = QtWidgets.QTableView(self)
