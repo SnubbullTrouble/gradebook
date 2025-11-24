@@ -3,7 +3,7 @@ from gradebook.views.main_window.errors import InvalidTabError
 from gradebook.views.main_window.tabs.homework_tab import Homework
 from gradebook.views.main_window.tabs.roster_tab import Roster
 from gradebook.views.main_window.ui_mainwindow import Ui_MainWindow
-from PySide6.QtWidgets import QMainWindow
+from PySide6.QtWidgets import QMainWindow, QApplication
 from PySide6 import QtWidgets, QtCore
 from gradebook.views.class_window.class_window import ClassWindow
 from gradebook.database.services import classes as class_service
@@ -13,11 +13,14 @@ from gradebook.views.main_window.tabs.tab import Tab
 from gradebook.database.models import Student
 from gradebook.views.dialogs.new_student import NewStudentDialog
 from gradebook.views.table_view_window.table_view_window import TableViewWindow
+from gradebook.views.main_window.save_state import SaveState
+from gradebook.views.main_window.toml_utils import load_from_toml, save_to_toml
 import typing
 
 if typing.TYPE_CHECKING:
     from gradebook.database.models import Class
 
+SESSION_FILEPATH = ".session.toml"
 
 class MainWindow(QMainWindow):
     # Settings
@@ -33,10 +36,14 @@ class MainWindow(QMainWindow):
     # Database data
     _selected_class = None
 
-    def __init__(self) -> None:
+    # State Information
+    _session_data: SaveState = None
+
+    def __init__(self, parent: QApplication) -> None:
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.app = parent
 
         self._connect_handlers()
 
@@ -44,8 +51,11 @@ class MainWindow(QMainWindow):
         self._set_status("Ready")
         self.ui.lClassName.setText("No class selected")
         self.ui.tabWidget.clear()
-
         self._create_tab_views()
+
+        # Read Save State information
+        self._initialize_save_state()
+        self._set_session_data()
 
     @property
     def _current_class(self) -> "Class":
@@ -62,6 +72,7 @@ class MainWindow(QMainWindow):
         self._selected_class = value    
         self._refresh_tables()
         self.ui.lClassName.setText(value.name)
+        self._session_data.last_opened_class_id = value.id
 
     @property
     def _current_tab(self) -> "Tab":
@@ -197,6 +208,7 @@ class MainWindow(QMainWindow):
 
         # Signals
         self._class_changed.connect(self._refresh_tables)
+        self.app.aboutToQuit.connect(self._commit_save_state)
 
     def _bAdd_clicked(self) -> None:
         '''
@@ -210,5 +222,19 @@ class MainWindow(QMainWindow):
             case _:
                 raise InvalidTabError(self._current_tab.name)
             
+    def _initialize_save_state(self) -> None:
+        '''Initializes the Save State'''
+        try:
+            self._session_data = load_from_toml(SESSION_FILEPATH)
+        except:
+            self._set_status("Could not open Session Data.")
+            self._session_data = SaveState(None)
 
+    def _commit_save_state(self) -> None:
+        '''Saves the Save State to the session file'''
+        save_to_toml(SESSION_FILEPATH, self._session_data)
+
+    def _set_session_data(self) -> None:
+        '''Sets the selected class by calling the class service using the session class id'''
+        self._current_class = class_service.get_class_by_id(self._session_data.last_opened_class_id)
 
