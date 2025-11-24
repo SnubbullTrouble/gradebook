@@ -57,6 +57,7 @@ class Assignment(BaseModel):
     id = AutoField()
     title = CharField()
     category = CharField()  # quiz, test, homework
+    #total_points = FloatField()
 
 
 class AssignmentQuestion(BaseModel):
@@ -74,7 +75,6 @@ class ClassAssignment(BaseModel):
     id = AutoField()
     class_ref = ForeignKeyField(Class, backref="assignments", on_delete="CASCADE")
     assignment = ForeignKeyField(Assignment, backref="assigned_classes", on_delete="CASCADE")
-    total_points = FloatField()
 
     class Meta:
         indexes = ((("class_ref", "assignment"), True),)

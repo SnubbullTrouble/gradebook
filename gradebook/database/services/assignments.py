@@ -1,11 +1,7 @@
 import dataclasses
 from typing import List
 from peewee import IntegrityError
-from gradebook.database.models import Assignment, AssignmentQuestion, ClassAssignment
-import typing
-
-if typing.TYPE_CHECKING:
-    from gradebook.database.models import Class, Student
+from gradebook.database.models import Assignment, AssignmentQuestion, ClassAssignment, Class
 
 @dataclasses.dataclass
 class Question:
@@ -58,8 +54,11 @@ def assign_to_class(cls: "Class", assignment: Assignment) -> ClassAssignment:
         total_points=total_points
     )
 
-def get_assignments_for_class(class_id: int) -> list[object]:
-    pass #ClassAssignment.select()
+def get_assignments_for_class(class_id: int, category: str = None) -> list[Assignment]:
+    if category:
+        return list(Assignment.select().join(ClassAssignment).join(Class).where(Class.id == class_id and Assignment.category == category))
+    else:
+        return list(Assignment.select().join(ClassAssignment).join(Class).where(Class.id == class_id))
 
 #def get_student_assignment_scores(student: "Student", assignment_type: str) -> list[Assignment]:
 

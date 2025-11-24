@@ -149,7 +149,7 @@ class MainWindow(QMainWindow):
                 questions = [assignment_service.Question(q, p) for (q, p) in dialog.questions]
 
                 # Create a new record with the assignment data
-                new_assignment_record = assignment_service.create_assignment(dialog.assignment_name, dialog.total_points, questions)
+                new_assignment_record = assignment_service.create_assignment(dialog.assignment_name, self.ui.tabWidget.currentWidget().name, questions)
 
                 # Link the assignment to the existing class
                 assignment_service.assign_to_class(self._selected_class, new_assignment_record)
