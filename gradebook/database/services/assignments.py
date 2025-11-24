@@ -55,6 +55,16 @@ def assign_to_class(cls: "Class", assignment: Assignment) -> ClassAssignment:
     )
 
 def get_assignments_for_class(class_id: int, category: str = None) -> list[Assignment]:
+    '''
+    Gets a list of assignments for the provided class id
+
+    Args:
+        class_id (int): id of the class to filter on
+        category (str): category to filter on (optional)
+
+    Returns:
+        list(Assignment): the list of assignments for this class (and category, if provided)
+    '''
     if category:
         return list(Assignment.select().join(ClassAssignment).join(Class).where(Class.id == class_id and Assignment.category == category))
     else:

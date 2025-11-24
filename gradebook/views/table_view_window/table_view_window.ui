@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>DataVerificationDialog</class>
- <widget class="QDialog" name="DataVerificationDialog">
+ <class>TableViewWindow</class>
+ <widget class="QDialog" name="TableViewWindow">
   <property name="windowModality">
    <enum>Qt::WindowModality::ApplicationModal</enum>
   </property>
@@ -9,17 +9,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>702</width>
+    <height>452</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QTableWidget" name="tableWidget"/>
-   </item>
    <item row="1" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
@@ -30,6 +27,9 @@
      </property>
     </widget>
    </item>
+   <item row="0" column="0">
+    <widget class="QTableView" name="tableView"/>
+   </item>
   </layout>
  </widget>
  <resources/>
@@ -37,7 +37,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>DataVerificationDialog</receiver>
+   <receiver>TableViewWindow</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -53,7 +53,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>DataVerificationDialog</receiver>
+   <receiver>TableViewWindow</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

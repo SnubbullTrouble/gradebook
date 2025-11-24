@@ -12,7 +12,7 @@ from gradebook.database.services import assignments as assignment_service
 from gradebook.views.main_window.tabs.tab import Tab
 from gradebook.database.models import Student
 from gradebook.views.dialogs.new_student import NewStudentDialog
-from gradebook.views.dialogs.data_verification import DataVerificationDialog
+from gradebook.views.table_view_window.table_view_window import TableViewWindow
 import typing
 
 if typing.TYPE_CHECKING:
@@ -107,7 +107,10 @@ class MainWindow(QMainWindow):
                 # Confirm
                 if self._show_verification_dialog:
                     roster_tab: Roster = self.ui.tabWidget.currentWidget()
-                    verification_dialog = DataVerificationDialog(table, roster_tab.headers, self)
+                    
+                    verification_dialog = TableViewWindow(self)
+                    verification_dialog.set_headers(roster_tab.headers)
+                    verification_dialog.set_model_data(table)
                     verification_dialog.exec()
 
                     if verification_dialog.result() != QtWidgets.QDialog.Accepted:
