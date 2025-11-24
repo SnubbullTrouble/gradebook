@@ -31,7 +31,6 @@ class MainWindow(QMainWindow):
     _tabs = [Roster, Homework]
 
     # Database data
-    _selected_roster = None
     _selected_class = None
 
     def __init__(self) -> None:
@@ -65,11 +64,11 @@ class MainWindow(QMainWindow):
         self.ui.lClassName.setText(value.name)
 
     @property
-    def _roster(self) -> list["Student"]:
+    def _current_tab(self) -> "Tab":
         '''
-        Property to get the class roster.
+        Property to get current tab
         '''
-        return self._selected_roster
+        return self.ui.tabWidget.currentWidget()
 
     # View Management
 
@@ -106,8 +105,8 @@ class MainWindow(QMainWindow):
 
                 # Confirm
                 if self._show_verification_dialog:
-                    roster_tab: Roster = self.ui.tabWidget.currentWidget()
-                    
+                    roster_tab: Roster = self._current_tab
+
                     verification_dialog = TableViewWindow(self)
                     verification_dialog.set_headers(roster_tab.headers)
                     verification_dialog.set_model_data(table)
@@ -145,6 +144,8 @@ class MainWindow(QMainWindow):
         '''
         if self._selected_class is not None:
             dialog = AssignmentWindow()
+            tab: Homework = self._current_tab
+            dialog.set_existing_assignment_names(tab.assignment_names)
             dialog.exec()
 
             if dialog.result() == QtWidgets.QDialog.Accepted:
@@ -152,10 +153,12 @@ class MainWindow(QMainWindow):
                 questions = [assignment_service.Question(q, p) for (q, p) in dialog.questions]
 
                 # Create a new record with the assignment data
-                new_assignment_record = assignment_service.create_assignment(dialog.assignment_name, self.ui.tabWidget.currentWidget().name, questions)
+                new_assignment_record = assignment_service.create_assignment(dialog.assignment_name, self._current_tab.name, questions)
 
                 # Link the assignment to the existing class
                 assignment_service.assign_to_class(self._selected_class, new_assignment_record)
+
+                # Make a record of answers for each student in the class
 
                 self._refresh_tables()
             else:
@@ -199,13 +202,13 @@ class MainWindow(QMainWindow):
         '''
         Handler for the Add button click event.
         '''
-        match self.ui.tabWidget.currentWidget().name:
+        match self._current_tab.name:
             case Roster.__name__:
                 self._add_student_clicked()
             case Homework.__name__:
                 self._add_assignment_clicked()
             case _:
-                raise InvalidTabError(self.ui.tabWidget.currentWidget().name)
+                raise InvalidTabError(self._current_tab.name)
             
 
 

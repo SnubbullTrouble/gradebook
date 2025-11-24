@@ -69,6 +69,18 @@ def get_assignments_for_class(class_id: int, category: str = None) -> list[Assig
         return list(Assignment.select().join(ClassAssignment).join(Class).where(Class.id == class_id and Assignment.category == category))
     else:
         return list(Assignment.select().join(ClassAssignment).join(Class).where(Class.id == class_id))
+    
+def get_assignment_questions(assignment_id) -> list[AssignmentQuestion]:
+    '''
+    Gets the assignment questions for a particular assignment
+
+    Args:
+        assignment_id (int): the assignment to grab
+    
+    Returns:
+        list(AssignmentQuestion): the questions in the assignment
+    '''
+    return list(AssignmentQuestion.select().join(Assignment).where(Assignment.id == assignment_id))
 
 #def get_student_assignment_scores(student: "Student", assignment_type: str) -> list[Assignment]:
 

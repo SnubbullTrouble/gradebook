@@ -5,6 +5,10 @@ from gradebook.database.models import (
     StudentAssignmentScore,
     AssignmentCategoryWeight,
     Class,
+    StudentQuestionScore,
+    Student,
+    AssignmentQuestion,
+    Assignment
 )
 
 
@@ -91,3 +95,24 @@ def compute_final_grade(cls_roster_entry: ClassRoster) -> float:
             final_grade += (cat_total / cat_max) * weight
 
     return final_grade / total_weight * 100
+
+def get_student_scores_for_assignment(assignment_id: int, student_id: int) -> list[StudentQuestionScore]:
+    '''
+    Gets the question scores for an assignment for a student.
+
+    Args:
+        assignment_id (int): the assignment to grab
+        student_id (int): the student to get questions for
+    '''
+    return list((
+    StudentQuestionScore
+    .select()
+    .join(Student)  # via StudentQuestionScore.student
+    .switch(StudentQuestionScore)
+    .join(AssignmentQuestion)  # via StudentQuestionScore.assignment_question
+    .join(Assignment)  # via AssignmentQuestion.assignment
+    .where(
+        Student.id == student_id,
+        Assignment.id == assignment_id
+    )
+))

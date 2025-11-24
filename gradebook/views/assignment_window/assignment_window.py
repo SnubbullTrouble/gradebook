@@ -9,6 +9,7 @@ if typing.TYPE_CHECKING:
 class AssignmentWindow(QtWidgets.QDialog):
 
     _data_model = QtGui.QStandardItemModel()
+    _existing_assignment_names = []
 
     def __init__(self, parent: QtWidgets.QMainWindow = None, selected_assignment: "Assignment" = None):
         super().__init__(parent)
@@ -16,14 +17,12 @@ class AssignmentWindow(QtWidgets.QDialog):
         self.ui.setupUi(self)
         self.setModal(True)
         self._selected_assignment = selected_assignment
-        
-        # Disenable the save button initially
-        self.ui.buttonBox.buttons()[0].setEnabled(False)
 
         # Signals
         self.ui.bAdd.clicked.connect(self._add_row_to_model)
         self._data_model.dataChanged.connect(self._set_bSave_enable)
         self.ui.tbName.textChanged.connect(self._set_bSave_enable)
+        self.ui.tbName.textChanged.connect(self._set_text_box_style)
 
         # Connect Model
         self._connect_model()
@@ -57,8 +56,10 @@ class AssignmentWindow(QtWidgets.QDialog):
         '''
         Enables the Save button
         '''
-        if len(self.ui.tbName.text().strip()) > 0 and self._data_model.rowCount() > 0:
+        if len(self.ui.tbName.text().strip()) > 0 and self._data_model.rowCount() > 0 and self.ui.tbName.text().strip() not in self._existing_assignment_names:
             self.ui.buttonBox.buttons()[0].setEnabled(True)
+        else:
+            self.ui.buttonBox.buttons()[0].setEnabled(False)
 
     def _add_row_to_model(self, description: str = "", points: str = "") -> None:
         '''
@@ -112,3 +113,21 @@ class AssignmentWindow(QtWidgets.QDialog):
                     pass  # ignore non-numeric cells
 
         return total
+    
+    def set_existing_assignment_names(self, names: list[str]) -> None:
+        '''
+        Sets the list of taken assignment names.
+
+        Args:
+            names (list[str]): the names of invalid assignments
+        '''
+        self._existing_assignment_names = names
+
+    def _set_text_box_style(self) -> None:
+        '''
+        Sets the styling for the Name box if a name is invalid.
+        '''
+        if self.ui.tbName.text().strip() in self._existing_assignment_names:
+            self.ui.tbName.setStyleSheet("background-color: rgba(255, 0, 0, 0.2);")
+        else:
+            self.ui.tbName.setStyleSheet("")
