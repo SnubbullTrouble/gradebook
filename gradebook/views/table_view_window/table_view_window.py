@@ -6,6 +6,7 @@ class TableViewWindow(QtWidgets.QDialog):
     Dialog for verifying data before importing.
     '''
 
+    _data_model_update_lock = False
     _data_model = QtGui.QStandardItemModel()
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:

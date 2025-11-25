@@ -106,13 +106,18 @@ def get_student_scores_for_assignment(assignment_id: int, student_id: int) -> li
     '''
     return list((
     StudentQuestionScore
-    .select()
+    .select(StudentQuestionScore, StudentAssignmentScore)
     .join(Student)  # via StudentQuestionScore.student
     .switch(StudentQuestionScore)
     .join(AssignmentQuestion)  # via StudentQuestionScore.assignment_question
     .join(Assignment)  # via AssignmentQuestion.assignment
+    .join(ClassAssignment)
+    .join(StudentAssignmentScore)
     .where(
         Student.id == student_id,
         Assignment.id == assignment_id
     )
 ))
+
+def get_student_assignment_score(student_id: int, assignment_id: int) -> StudentAssignmentScore:
+    return list()[0]

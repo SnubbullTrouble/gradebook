@@ -131,15 +131,35 @@ class Homework(Tab):
                 score_records: list["StudentQuestionScore"] = scoring_service.get_student_scores_for_assignment(selected_assignment.id, student.id)
                 row_data = [student.student_number, student.last_name, student.first_name]
                 if score_records == []:
-                    table.append(row_data + [0 for i in range(len(question_list))])
+                    table.append(row_data + [0 for i in range(len(question_list) + 2)])
                 else:
-                    table.append(row_data + [s.points_scored for s in score_records])
+                    table.append(row_data + [s.points_scored for s in score_records] ) # TODO: figure out what structure gets returned
 
             window = TableViewWindow(self)
-            window.set_headers(["Student ID", "Last Name", "First Name"] + [q.text for q in question_list])
+
+            def _sum_totals(self) -> None:
+                '''
+                Gets the points sum for each row and updates the table
+                '''
+                if window._data_model_update_lock:
+                    return
+                
+                # Prevent an infinite loop
+                window._data_model_update_lock = True
+
+                for r in range(window._data_model.rowCount()):
+                    sum = 0
+                    for c in range(3, window._data_model.columnCount() - 2):
+                        sum += int(window._data_model.item(r, c).text())
+                    window._data_model.setItem(r, window._data_model.columnCount() - 1, QtGui.QStandardItem(str(sum)))
+
+                # Unlock for the next time it changes
+                window._data_model_update_lock = False
+
+            window._data_model.dataChanged.connect(_sum_totals)
+            window.set_headers(["Student ID", "Last Name", "First Name"] + [q.text for q in question_list] + ["Time", "Total"])
             window.set_model_data(table)
             window.exec()
-
 
     def _add_row_to_data_model(self, text: str) -> None:
         '''
@@ -150,3 +170,4 @@ class Homework(Tab):
     def _listview_clicked(self, item: QtCore.QModelIndex) -> None:
         '''Sets the current selected item when the view is clicked'''
         self._selected_view_item = item.data()
+
