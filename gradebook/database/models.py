@@ -1,3 +1,4 @@
+import os
 from peewee import (
     Model,
     SqliteDatabase,
@@ -12,8 +13,10 @@ from peewee import (
 
 # Use in-memory database for tests; replace with file path for production
 # db = SqliteDatabase(':memory:')
-# TODO
-db = SqliteDatabase("gradebook.db")
+
+# Get path from ENV
+DB_PATH = os.getenv("DB_PATH", "gradebook.db")
+db = SqliteDatabase(DB_PATH)
 
 
 class BaseModel(Model):
