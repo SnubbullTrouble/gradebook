@@ -223,7 +223,7 @@ class MainWindow(QMainWindow):
                 raise InvalidTabError(self._current_tab.name)
             
     def _initialize_save_state(self) -> None:
-        '''Initializes the Save State'''
+        '''Initializes the Save State by reading the session data from the save state toml'''
         try:
             self._session_data = load_from_toml(SESSION_FILEPATH)
         except:
@@ -236,5 +236,8 @@ class MainWindow(QMainWindow):
 
     def _set_session_data(self) -> None:
         '''Sets the selected class by calling the class service using the session class id'''
-        self._current_class = class_service.get_class_by_id(self._session_data.last_opened_class_id)
+        if self._session_data.last_opened_class_id:
+            self._current_class = class_service.get_class_by_id(self._session_data.last_opened_class_id)
+        else:
+            self._set_status("No session data found")
 
