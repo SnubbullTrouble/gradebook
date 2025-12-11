@@ -15,6 +15,7 @@ from gradebook.views.dialogs.new_student import NewStudentDialog
 from gradebook.views.table_view_window.table_view_window import TableViewWindow
 from gradebook.views.main_window.save_state import SaveState
 from gradebook.views.main_window.toml_utils import load_from_toml, save_to_toml
+from peewee import DoesNotExist
 import typing
 
 if typing.TYPE_CHECKING:
@@ -261,8 +262,13 @@ class MainWindow(QMainWindow):
     def _set_session_data(self) -> None:
         """Sets the selected class by calling the class service using the session class id"""
         if self._session_data.last_opened_class_id:
-            self._current_class = class_service.get_class_by_id(
-                self._session_data.last_opened_class_id
-            )
+            try:
+                self._current_class = class_service.get_class_by_id(
+                    self._session_data.last_opened_class_id
+                )
+            except DoesNotExist as e:
+                self._set_status(
+                    f"Cannot reopen Class ID = {self._session_data.last_opened_class_id}. It does not exist."
+                )
         else:
             self._set_status("No session data found")
