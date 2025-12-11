@@ -31,44 +31,48 @@ class Homework(Tab):
 
     @property
     def assignment_names(self) -> list[str]:
-        '''
+        """
         Property to get assignment names from data model
-        '''
-        return [self._data_model.index(i).data() for i in range(self._data_model.rowCount())]
+        """
+        return [
+            self._data_model.index(i).data() for i in range(self._data_model.rowCount())
+        ]
 
     def on_save_data(self) -> None:
-        '''
+        """
         Slot to handle data saving.
-        '''
+        """
         raise NotImplementedError("Subclasses must implement on_save_data method.")
 
     def on_fetch_data(self, model: "Class") -> None:
-        '''
+        """
         Fetches the data and caches it for later.
 
         Args:
             model (Class): the class to get assignments of
-        '''
+        """
         self._selected_class = model
         # Get all the homeworks for the class
-        self._assignment_list = assignment_service.get_assignments_for_class(model.id, self.name)
+        self._assignment_list = assignment_service.get_assignments_for_class(
+            model.id, self.name
+        )
 
     def on_refresh_view(self) -> None:
-        '''
+        """
         Loads the view model with the cached data.
-        '''
+        """
         self._data_model.setStringList([a.title for a in self._assignment_list])
 
     def _create_view(self) -> None:
-        '''
+        """
         Add a table view to the tab.
-        '''
+        """
         # Set my name
-        self.setObjectName(u"tab" + self.name)
+        self.setObjectName("tab" + self.name)
 
         # Add a layout to my view
         self._gridLayout = QtWidgets.QGridLayout(self)
-        self._gridLayout.setObjectName(u"gridLayout")
+        self._gridLayout.setObjectName("gridLayout")
 
         # List Box
         self._listView = QtWidgets.QListView()
@@ -79,19 +83,24 @@ class Homework(Tab):
 
         # Add A Button Layout
         self._horizontal_layout = QtWidgets.QHBoxLayout()
-        self._spacer_widget = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
+        self._spacer_widget = QtWidgets.QSpacerItem(
+            40,
+            20,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Minimum,
+        )
         self._horizontal_layout.addItem(self._spacer_widget)
 
         # Add the button
         self._bGrade = QtWidgets.QPushButton("Grade")
         self._bGrade.setObjectName(f"bGrade")
         self._horizontal_layout.addWidget(self._bGrade)
-    
+
         # Add the layout
         self._gridLayout.addLayout(self._horizontal_layout, 1, 0, 1, 1)
 
     def _get_assignment_from_name(self, name: str) -> int:
-        '''
+        """
         Gets the assignment ide from the name.
 
         Args:
@@ -99,7 +108,7 @@ class Homework(Tab):
 
         Returns:
             int: the id of the assignment
-        '''
+        """
         assignments: list[Assignment] = []
         for assignment in self._assignment_list:
             if assignment.title == self._selected_view_item:
@@ -107,19 +116,23 @@ class Homework(Tab):
 
         if len(assignments) != 1:
             raise ValueError(f"{len(assignments)} found with Name: {name}")
-        
+
         return assignments[0]
 
     def _bGrade_clicked(self) -> None:
-        '''
+        """
         Event handler for the Grade button opens the grading window
-        '''
+        """
         if self._selected_view_item:
             # Selected Assignment
-            selected_assignment: Assignment = self._get_assignment_from_name(self._selected_view_item)
+            selected_assignment: Assignment = self._get_assignment_from_name(
+                self._selected_view_item
+            )
 
             # Get the question list for the headers
-            question_list: list[AssignmentQuestion] = assignment_service.get_assignment_questions(selected_assignment.id)
+            question_list: list[AssignmentQuestion] = (
+                assignment_service.get_assignment_questions(selected_assignment.id)
+            )
 
             # Get the roster
             student_list = class_service.get_students_in_class(self._selected_class.id)
@@ -128,22 +141,32 @@ class Homework(Tab):
             table = []
             for student in student_list:
                 # Get the student score for each question
-                score_records: list["StudentQuestionScore"] = scoring_service.get_student_scores_for_assignment(selected_assignment.id, student.id)
-                row_data = [student.student_number, student.last_name, student.first_name]
+                score_records: list["StudentQuestionScore"] = (
+                    scoring_service.get_student_scores_for_assignment(
+                        selected_assignment.id, student.id
+                    )
+                )
+                row_data = [
+                    student.student_number,
+                    student.last_name,
+                    student.first_name,
+                ]
                 if score_records == []:
                     table.append(row_data + [0 for i in range(len(question_list) + 2)])
                 else:
-                    table.append(row_data + [s.points_scored for s in score_records] ) # TODO: figure out what structure gets returned
+                    table.append(
+                        row_data + [s.points_scored for s in score_records]
+                    )  # TODO: figure out what structure gets returned
 
             window = TableViewWindow(self)
 
             def _sum_totals(self) -> None:
-                '''
+                """
                 Gets the points sum for each row and updates the table
-                '''
+                """
                 if window._data_model_update_lock:
                     return
-                
+
                 # Prevent an infinite loop
                 window._data_model_update_lock = True
 
@@ -151,23 +174,30 @@ class Homework(Tab):
                     sum = 0
                     for c in range(3, window._data_model.columnCount() - 2):
                         sum += int(window._data_model.item(r, c).text())
-                    window._data_model.setItem(r, window._data_model.columnCount() - 1, QtGui.QStandardItem(str(sum)))
+                    window._data_model.setItem(
+                        r,
+                        window._data_model.columnCount() - 1,
+                        QtGui.QStandardItem(str(sum)),
+                    )
 
                 # Unlock for the next time it changes
                 window._data_model_update_lock = False
 
             window._data_model.dataChanged.connect(_sum_totals)
-            window.set_headers(["Student ID", "Last Name", "First Name"] + [q.text for q in question_list] + ["Time", "Total"])
+            window.set_headers(
+                ["Student ID", "Last Name", "First Name"]
+                + [q.text for q in question_list]
+                + ["Time", "Total"]
+            )
             window.set_model_data(table)
             window.exec()
 
     def _add_row_to_data_model(self, text: str) -> None:
-        '''
+        """
         Add a value to the model
-        '''
+        """
         self._data_model.appendRow(QtGui.QStandardItem(text))
 
     def _listview_clicked(self, item: QtCore.QModelIndex) -> None:
-        '''Sets the current selected item when the view is clicked'''
+        """Sets the current selected item when the view is clicked"""
         self._selected_view_item = item.data()
-

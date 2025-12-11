@@ -7,14 +7,15 @@ from peewee import (
     FloatField,
     TextField,
     IntegerField,
-    DateField
+    DateField,
 )
 
 # Use in-memory database for tests; replace with file path for production
 # db = SqliteDatabase(':memory:')
 # TODO
-db = SqliteDatabase('gradebook.db')
- 
+db = SqliteDatabase("gradebook.db")
+
+
 class BaseModel(Model):
     """Base model class for Peewee."""
 
@@ -57,7 +58,7 @@ class Assignment(BaseModel):
     id = AutoField()
     title = CharField()
     category = CharField()  # quiz, test, homework
-    #total_points = FloatField()
+    # total_points = FloatField()
 
 
 class AssignmentQuestion(BaseModel):
@@ -74,7 +75,9 @@ class ClassAssignment(BaseModel):
 
     id = AutoField()
     class_ref = ForeignKeyField(Class, backref="assignments", on_delete="CASCADE")
-    assignment = ForeignKeyField(Assignment, backref="assigned_classes", on_delete="CASCADE")
+    assignment = ForeignKeyField(
+        Assignment, backref="assigned_classes", on_delete="CASCADE"
+    )
 
     class Meta:
         indexes = ((("class_ref", "assignment"), True),)
@@ -85,16 +88,21 @@ class StudentAssignmentScore(BaseModel):
 
     id = AutoField()
     roster_entry = ForeignKeyField(ClassRoster, backref="scores", on_delete="CASCADE")
-    class_assignment = ForeignKeyField(ClassAssignment, backref="scores", on_delete="CASCADE")
+    class_assignment = ForeignKeyField(
+        ClassAssignment, backref="scores", on_delete="CASCADE"
+    )
     total_score = FloatField()
     total_time = IntegerField(null=True)  # in seconds, optional
-    
+
 
 class StudentQuestionScore(BaseModel):
     """Stores a student's score for each question."""
+
     id = AutoField()
     student = ForeignKeyField(Student, backref="question_scores", on_delete="CASCADE")
-    assignment_question = ForeignKeyField(AssignmentQuestion, backref="student_scores", on_delete="CASCADE")
+    assignment_question = ForeignKeyField(
+        AssignmentQuestion, backref="student_scores", on_delete="CASCADE"
+    )
     points_scored = FloatField()
 
     class Meta:
@@ -115,14 +123,16 @@ class AssignmentCategoryWeight(BaseModel):
 
 # Create tables
 db.connect()
-db.create_tables([
-    Class,
-    Student,
-    ClassRoster,
-    Assignment,
-    AssignmentQuestion,
-    ClassAssignment,
-    StudentAssignmentScore,
-    AssignmentCategoryWeight,
-    StudentQuestionScore
-])
+db.create_tables(
+    [
+        Class,
+        Student,
+        ClassRoster,
+        Assignment,
+        AssignmentQuestion,
+        ClassAssignment,
+        StudentAssignmentScore,
+        AssignmentCategoryWeight,
+        StudentQuestionScore,
+    ]
+)

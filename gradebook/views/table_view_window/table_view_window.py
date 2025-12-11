@@ -1,10 +1,11 @@
 from PySide6 import QtWidgets, QtGui
 from gradebook.views.table_view_window.ui_table_view_window import Ui_TableViewWindow
 
+
 class TableViewWindow(QtWidgets.QDialog):
-    '''
+    """
     Dialog for verifying data before importing.
-    '''
+    """
 
     _data_model_update_lock = False
     _data_model = QtGui.QStandardItemModel()
@@ -23,24 +24,23 @@ class TableViewWindow(QtWidgets.QDialog):
         return self._data_model
 
     def set_headers(self, headers: list[str]) -> None:
-        '''
+        """
         Sets the headers for the model
 
         Args:
             list(str): headers to use in the model
-        '''
+        """
         self._data_model.setHorizontalHeaderLabels(headers)
 
     def set_model_data(self, data: list[list[any]]) -> None:
-        '''
+        """
         Sets sets the data of the view model using raw data.
 
         Args:
-            data (list[list[any]]): The raw data to add to the model        
-        '''
+            data (list[list[any]]): The raw data to add to the model
+        """
         self._data_model.removeRows(0, self._data_model.rowCount())
 
         for r in data:
             new_row = [QtGui.QStandardItem(str(c)) for c in r]
             self._data_model.appendRow(new_row)
-

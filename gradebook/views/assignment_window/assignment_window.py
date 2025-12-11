@@ -6,12 +6,17 @@ import typing
 if typing.TYPE_CHECKING:
     from gradebook.database.models import Assignment
 
+
 class AssignmentWindow(QtWidgets.QDialog):
 
     _data_model = QtGui.QStandardItemModel()
     _existing_assignment_names = []
 
-    def __init__(self, parent: QtWidgets.QMainWindow = None, selected_assignment: "Assignment" = None):
+    def __init__(
+        self,
+        parent: QtWidgets.QMainWindow = None,
+        selected_assignment: "Assignment" = None,
+    ):
         super().__init__(parent)
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
@@ -29,55 +34,61 @@ class AssignmentWindow(QtWidgets.QDialog):
 
     @property
     def questions(self) -> list[tuple[str, int]]:
-        '''The rows in the table.'''
+        """The rows in the table."""
         return self._get_rows_as_tuples()
-    
+
     @property
     def assignment_name(self) -> str:
-        '''
+        """
         The name of the file.
-        '''
+        """
         return self.ui.tbName.text().strip()
-    
+
     @property
     def total_points(self) -> int:
-        '''Total points of the assignment'''
+        """Total points of the assignment"""
         return self._get_total_points_value()
-    
+
     def _connect_model(self) -> None:
-        '''Connect the model to the table and set the headers'''
+        """Connect the model to the table and set the headers"""
         self._data_model.setHorizontalHeaderLabels(["Description", "Points"])
         self.ui.tableView.setModel(self._data_model)
-        
+
     def _load_Assignment(self) -> None:
         raise NotImplementedError("Assignment Loader not implemented")
 
     def _set_bSave_enable(self) -> None:
-        '''
+        """
         Enables the Save button
-        '''
-        if len(self.ui.tbName.text().strip()) > 0 and self._data_model.rowCount() > 0 and self.ui.tbName.text().strip() not in self._existing_assignment_names:
+        """
+        if (
+            len(self.ui.tbName.text().strip()) > 0
+            and self._data_model.rowCount() > 0
+            and self.ui.tbName.text().strip() not in self._existing_assignment_names
+        ):
             self.ui.buttonBox.buttons()[0].setEnabled(True)
         else:
             self.ui.buttonBox.buttons()[0].setEnabled(False)
 
     def _add_row_to_model(self, description: str = "", points: str = "") -> None:
-        '''
+        """
         Adds the data to the model as a new row.
 
         Args:
             description (str): question description
             points (int): point value of the question
-        '''
-        self._data_model.appendRow([QtGui.QStandardItem(description), QtGui.QStandardItem(points)])
+        """
+        self._data_model.appendRow(
+            [QtGui.QStandardItem(description), QtGui.QStandardItem(points)]
+        )
 
     def _get_rows_as_tuples(self) -> list[tuple[str, int]]:
-        '''
+        """
         Gets the table data in a parsable format
-        
+
         Returns:
             list[tuple[str, int]]: the description and points values for each question
-        '''
+        """
         model = self._data_model
         rows = model.rowCount()
         cols = model.columnCount()
@@ -93,14 +104,14 @@ class AssignmentWindow(QtWidgets.QDialog):
             result.append(row_tuple)
 
         return result
-    
+
     def _get_total_points_value(self) -> None:
-        '''
+        """
         Gets the total value of the assignment.
 
         Returns:
             int: the total points value
-        '''
+        """
         total = 0
 
         for row in range(self._data_model.rowCount()):
@@ -113,20 +124,20 @@ class AssignmentWindow(QtWidgets.QDialog):
                     pass  # ignore non-numeric cells
 
         return total
-    
+
     def set_existing_assignment_names(self, names: list[str]) -> None:
-        '''
+        """
         Sets the list of taken assignment names.
 
         Args:
             names (list[str]): the names of invalid assignments
-        '''
+        """
         self._existing_assignment_names = names
 
     def _set_text_box_style(self) -> None:
-        '''
+        """
         Sets the styling for the Name box if a name is invalid.
-        '''
+        """
         if self.ui.tbName.text().strip() in self._existing_assignment_names:
             self.ui.tbName.setStyleSheet("background-color: rgba(255, 0, 0, 0.2);")
         else:

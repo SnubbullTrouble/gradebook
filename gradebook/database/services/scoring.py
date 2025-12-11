@@ -8,7 +8,7 @@ from gradebook.database.models import (
     StudentQuestionScore,
     Student,
     AssignmentQuestion,
-    Assignment
+    Assignment,
 )
 
 
@@ -34,7 +34,7 @@ def record_full_assignment(
         roster_entry=roster_entry,
         class_assignment=class_assignment,
         total_score=total_score,
-        total_time=total_time
+        total_time=total_time,
     )
 
 
@@ -71,20 +71,31 @@ def compute_final_grade(cls_roster_entry: ClassRoster) -> float:
         float: Weighted final grade (0-100)
     """
     cls = cls_roster_entry.class_ref
-    weights = {w.category: w.weight for w in AssignmentCategoryWeight.select().where(AssignmentCategoryWeight.class_ref == cls)}
+    weights = {
+        w.category: w.weight
+        for w in AssignmentCategoryWeight.select().where(
+            AssignmentCategoryWeight.class_ref == cls
+        )
+    }
     total_weight = sum(weights.values())
     if total_weight == 0:
         return 0.0
 
     # Gather all assignments for this student
-    student_scores = StudentAssignmentScore.select().join(ClassRoster).where(ClassRoster.id == cls_roster_entry.id)
+    student_scores = (
+        StudentAssignmentScore.select()
+        .join(ClassRoster)
+        .where(ClassRoster.id == cls_roster_entry.id)
+    )
     category_totals: Dict[str, float] = {}
     category_max: Dict[str, float] = {}
 
     for score in student_scores:
         cat = score.class_assignment.assignment.category
         category_totals[cat] = category_totals.get(cat, 0.0) + score.total_score
-        category_max[cat] = category_max.get(cat, 0.0) + score.class_assignment.total_points
+        category_max[cat] = (
+            category_max.get(cat, 0.0) + score.class_assignment.total_points
+        )
 
     # Weighted average
     final_grade = 0.0
@@ -96,28 +107,32 @@ def compute_final_grade(cls_roster_entry: ClassRoster) -> float:
 
     return final_grade / total_weight * 100
 
-def get_student_scores_for_assignment(assignment_id: int, student_id: int) -> list[StudentQuestionScore]:
-    '''
+
+def get_student_scores_for_assignment(
+    assignment_id: int, student_id: int
+) -> list[StudentQuestionScore]:
+    """
     Gets the question scores for an assignment for a student.
 
     Args:
         assignment_id (int): the assignment to grab
         student_id (int): the student to get questions for
-    '''
-    return list((
-    StudentQuestionScore
-    .select(StudentQuestionScore, StudentAssignmentScore)
-    .join(Student)  # via StudentQuestionScore.student
-    .switch(StudentQuestionScore)
-    .join(AssignmentQuestion)  # via StudentQuestionScore.assignment_question
-    .join(Assignment)  # via AssignmentQuestion.assignment
-    .join(ClassAssignment)
-    .join(StudentAssignmentScore)
-    .where(
-        Student.id == student_id,
-        Assignment.id == assignment_id
+    """
+    return list(
+        (
+            StudentQuestionScore.select(StudentQuestionScore, StudentAssignmentScore)
+            .join(Student)  # via StudentQuestionScore.student
+            .switch(StudentQuestionScore)
+            .join(AssignmentQuestion)  # via StudentQuestionScore.assignment_question
+            .join(Assignment)  # via AssignmentQuestion.assignment
+            .join(ClassAssignment)
+            .join(StudentAssignmentScore)
+            .where(Student.id == student_id, Assignment.id == assignment_id)
+        )
     )
-))
 
-def get_student_assignment_score(student_id: int, assignment_id: int) -> StudentAssignmentScore:
+
+def get_student_assignment_score(
+    student_id: int, assignment_id: int
+) -> StudentAssignmentScore:
     return list()[0]

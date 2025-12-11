@@ -3,6 +3,7 @@ from peewee import IntegrityError
 from gradebook.database.models import Class, ClassRoster, Student
 from datetime import datetime
 
+
 def create_class(name: str, start_date: datetime, end_date: datetime) -> Class:
     """
     Create a new class.
@@ -35,6 +36,7 @@ def enroll_student(cls: Class, student: "Student") -> ClassRoster:
     """
     return ClassRoster.get_or_create(class_ref=cls, student=student)[0]
 
+
 def get_all_classes() -> list[Class]:
     """
     Retrieve all classes.
@@ -43,6 +45,7 @@ def get_all_classes() -> list[Class]:
         list[Class]: List of all Class objects.
     """
     return list(Class.select())
+
 
 def get_number_of_students_in_class(cls: Class) -> int:
     """
@@ -56,6 +59,7 @@ def get_number_of_students_in_class(cls: Class) -> int:
     """
     return ClassRoster.select().where(ClassRoster.class_ref == cls).count()
 
+
 def get_class_by_id(class_id: int) -> Class | None:
     """
     Retrieve a class by its ID.
@@ -68,6 +72,7 @@ def get_class_by_id(class_id: int) -> Class | None:
     """
     return Class.get(Class.id == class_id)
 
+
 def get_students_in_class(class_id: int) -> list["Student"]:
     """
     Retrieve all students enrolled in a specific class.
@@ -78,10 +83,5 @@ def get_students_in_class(class_id: int) -> list["Student"]:
     Returns:
         list[Student]: List of Student objects enrolled in the class.
     """
-    query = (
-        Student.select()
-        .join(ClassRoster)
-        .join(Class)
-        .where(Class.id == class_id)
-    )
+    query = Student.select().join(ClassRoster).join(Class).where(Class.id == class_id)
     return list(query)

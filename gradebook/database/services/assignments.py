@@ -1,14 +1,23 @@
 import dataclasses
 from typing import List
 from peewee import IntegrityError
-from gradebook.database.models import Assignment, AssignmentQuestion, ClassAssignment, Class
+from gradebook.database.models import (
+    Assignment,
+    AssignmentQuestion,
+    ClassAssignment,
+    Class,
+)
+
 
 @dataclasses.dataclass
 class Question:
     question: str
     points: int
 
-def create_assignment(title: str, category: str, questions: List[Question]) -> Assignment:
+
+def create_assignment(
+    title: str, category: str, questions: List[Question]
+) -> Assignment:
     """
     Create an assignment with multiple questions.
 
@@ -23,11 +32,10 @@ def create_assignment(title: str, category: str, questions: List[Question]) -> A
     assignment = Assignment.create(title=title, category=category)
     for q in questions:
         AssignmentQuestion.create(
-            assignment=assignment,
-            text=q.question,
-            point_value=q.points
+            assignment=assignment, text=q.question, point_value=q.points
         )
     return assignment
+
 
 def assign_to_class(cls: "Class", assignment: Assignment) -> ClassAssignment:
     """
@@ -49,13 +57,12 @@ def assign_to_class(cls: "Class", assignment: Assignment) -> ClassAssignment:
 
     # This will raise IntegrityError if the class_ref/assignment combination already exists.
     return ClassAssignment.create(
-        class_ref=cls,
-        assignment=assignment,
-        total_points=total_points
+        class_ref=cls, assignment=assignment, total_points=total_points
     )
 
+
 def get_assignments_for_class(class_id: int, category: str = None) -> list[Assignment]:
-    '''
+    """
     Gets a list of assignments for the provided class id
 
     Args:
@@ -64,23 +71,38 @@ def get_assignments_for_class(class_id: int, category: str = None) -> list[Assig
 
     Returns:
         list(Assignment): the list of assignments for this class (and category, if provided)
-    '''
+    """
     if category:
-        return list(Assignment.select().join(ClassAssignment).join(Class).where(Class.id == class_id and Assignment.category == category))
+        return list(
+            Assignment.select()
+            .join(ClassAssignment)
+            .join(Class)
+            .where(Class.id == class_id and Assignment.category == category)
+        )
     else:
-        return list(Assignment.select().join(ClassAssignment).join(Class).where(Class.id == class_id))
-    
+        return list(
+            Assignment.select()
+            .join(ClassAssignment)
+            .join(Class)
+            .where(Class.id == class_id)
+        )
+
+
 def get_assignment_questions(assignment_id) -> list[AssignmentQuestion]:
-    '''
+    """
     Gets the assignment questions for a particular assignment
 
     Args:
         assignment_id (int): the assignment to grab
-    
+
     Returns:
         list(AssignmentQuestion): the questions in the assignment
-    '''
-    return list(AssignmentQuestion.select().join(Assignment).where(Assignment.id == assignment_id))
+    """
+    return list(
+        AssignmentQuestion.select()
+        .join(Assignment)
+        .where(Assignment.id == assignment_id)
+    )
 
-#def get_student_assignment_scores(student: "Student", assignment_type: str) -> list[Assignment]:
 
+# def get_student_assignment_scores(student: "Student", assignment_type: str) -> list[Assignment]:
