@@ -54,7 +54,7 @@ class Homework(Tab):
         self._selected_class = model
         # Get all the homeworks for the class
         self._assignment_list = assignment_service.get_assignments_for_class(
-            model.id, self.name
+            model.id, self.name.lower()
         )
 
     def on_refresh_view(self) -> None:

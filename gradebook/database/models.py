@@ -60,7 +60,16 @@ class Assignment(BaseModel):
 
     id = AutoField()
     title = CharField()
-    category = CharField()  # quiz, test, homework
+    category = CharField(
+        choices=[
+            ("quiz", "quiz"),
+            ("test", "test"),
+            ("homework", "homework"),
+            ("final", "final"),
+            ("project", "project"),
+            ("participation", "participation"),
+        ]
+    )
     # total_points = FloatField()
 
 

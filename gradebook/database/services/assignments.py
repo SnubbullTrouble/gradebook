@@ -77,7 +77,7 @@ def get_assignments_for_class(class_id: int, category: str = None) -> list[Assig
             Assignment.select()
             .join(ClassAssignment)
             .join(Class)
-            .where(Class.id == class_id and Assignment.category == category)
+            .where(Assignment.category == category and Class.id == class_id)
         )
     else:
         return list(
