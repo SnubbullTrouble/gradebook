@@ -118,18 +118,34 @@ def get_student_scores_for_assignment(
         assignment_id (int): the assignment to grab
         student_id (int): the student to get questions for
     """
-    return list(
-        (
-            StudentQuestionScore.select(StudentQuestionScore, StudentAssignmentScore)
-            .join(Student)  # via StudentQuestionScore.student
-            .switch(StudentQuestionScore)
-            .join(AssignmentQuestion)  # via StudentQuestionScore.assignment_question
-            .join(Assignment)  # via AssignmentQuestion.assignment
-            .join(ClassAssignment)
-            .join(StudentAssignmentScore)
-            .where(Student.id == student_id, Assignment.id == assignment_id)
+    # Get SQS for the student & assignment
+    sqs_list = (
+        StudentQuestionScore.select(StudentQuestionScore)
+        .join(Student, on=(StudentQuestionScore.student == Student.id))
+        .join(
+            AssignmentQuestion,
+            on=(StudentQuestionScore.assignment_question == AssignmentQuestion.id),
         )
+        .join(Assignment, on=(AssignmentQuestion.assignment == Assignment.id))
+        .where(Student.id == student_id, Assignment.id == assignment_id)
     )
+
+    # Get all SAS rows for this assignment
+    sas_list = (
+        StudentAssignmentScore.select()
+        .join(
+            ClassAssignment,
+            on=(StudentAssignmentScore.class_assignment == ClassAssignment.id),
+        )
+        .where(ClassAssignment.assignment == assignment_id)
+    )
+
+    # Attach SAS rows to SQS manually
+    # We'll just attach all SAS rows to each SQS (since they all belong to the same assignment)
+    for sqs in sqs_list:
+        sqs.student_assignment_scores = sas_list
+
+    return list(sqs_list)
 
 
 def get_student_assignment_score(
