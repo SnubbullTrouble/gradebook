@@ -149,7 +149,91 @@ def get_student_scores_for_assignment(
     return list(sqs_list)
 
 
-def get_student_assignment_score(
-    student_id: int, assignment_id: int
+def update_student_question_score(
+    student_id: int, question_id: int, points_scored: float
+) -> StudentQuestionScore:
+    """
+    Update a student's score for a particular question in an assignment.
+
+    Args:
+        student_id (int): ID of the student.
+        question_id (int): ID of the question.
+        points_scored (float): Points scored on this question.
+
+    Returns:
+        StudentQuestionScore: The updated or created score record.
+    """
+    sqs, created = StudentQuestionScore.get_or_create(
+        student_id=student_id,
+        assignment_question_id=question_id,
+        defaults={"points_scored": points_scored},
+    )
+    if not created:
+        sqs.points_scored = points_scored
+        sqs.save()
+
+    return sqs
+
+
+def update_student_assignment_time(
+    student_id: int, assignment_id: int, total_time: int
 ) -> StudentAssignmentScore:
-    return list()[0]
+    """
+    Update a student's total time for an assignment.
+
+    Args:
+        student_id (int): ID of the student.
+        assignment_id (int): ID of the assignment.
+        total_time (int): Total time in seconds.
+
+    Returns:
+        StudentAssignmentScore: The updated score record with new total time.
+    """
+    sas = (
+        StudentAssignmentScore.select()
+        .join(
+            ClassAssignment,
+            on=(StudentAssignmentScore.class_assignment == ClassAssignment.id),
+        )
+        .join(ClassRoster, on=(StudentAssignmentScore.roster_entry == ClassRoster.id))
+        .where(
+            ClassRoster.student_id == student_id,
+            ClassAssignment.assignment_id == assignment_id,
+        )
+        .first()
+    )
+
+    if sas:
+        sas.total_time = total_time
+        sas.save()
+    return sas
+
+
+def get_student_assignment_time(student_id: int, assignment_id: int) -> int:
+    """
+    Gets the total time a student took on an assignment.
+
+    Args:
+        student_id (int): ID of the student
+        assignment_id (int): ID of the assignment
+
+    Returns:
+        int: Total time in seconds, or 0 if no record found
+    """
+    sas = (
+        StudentAssignmentScore.select()
+        .join(
+            ClassAssignment,
+            on=(StudentAssignmentScore.class_assignment == ClassAssignment.id),
+        )
+        .join(ClassRoster, on=(StudentAssignmentScore.roster_entry == ClassRoster.id))
+        .where(
+            ClassRoster.student_id == student_id,
+            ClassAssignment.assignment_id == assignment_id,
+        )
+        .first()
+    )
+
+    if sas:
+        return sas.total_time
+    return 0

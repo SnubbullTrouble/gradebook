@@ -3,6 +3,7 @@ from gradebook.views.main_window.tabs.tab import Tab
 from gradebook.database.services import assignments as assignment_service
 from gradebook.database.services import scoring as scoring_service
 from gradebook.database.services import classes as class_service
+from gradebook.database.services import students as students_service
 from PySide6 import QtWidgets, QtCore, QtGui
 from gradebook.views.table_view_window.table_view_window import TableViewWindow
 import typing
@@ -123,52 +124,106 @@ class Homework(Tab):
         Event handler for the Grade button opens the grading window
         """
         if self._selected_view_item:
-            # Selected Assignment
-            selected_assignment: Assignment = self._get_assignment_from_name(
-                self._selected_view_item
-            )
-
-            # Get the question list for the headers
-            question_list: list[AssignmentQuestion] = (
-                assignment_service.get_assignment_questions(selected_assignment.id)
-            )
-
-            # Get the roster
-            student_list = class_service.get_students_in_class(self._selected_class.id)
-
-            # Get or Create the rows for each student
-            table = []
-            for student in student_list:
-                # Get the student score for each question
-                score_records: list["StudentQuestionScore"] = (
-                    scoring_service.get_student_scores_for_assignment(
-                        selected_assignment.id, student.id
-                    )
-                )
-                row_data = [
-                    student.student_number,
-                    student.last_name,
-                    student.first_name,
-                ]
-                if score_records == []:
-                    table.append(
-                        row_data + [0 for i in range(len(question_list))] + ["", ""]
-                    )
-                else:
-                    table.append(
-                        row_data + [s.points_scored for s in score_records] + ["", ""]
-                    )  # TODO: figure out what structure gets returned
-
-            window = TableViewWindow(self)
-            window.set_headers(
-                ["Student ID", "Last Name", "First Name"]
-                + [q.text for q in question_list]
-                + ["Time", "Total"]
-            )
-
-            window.set_model_data(table)
-            window.sum_totals()
+            window = self._get_selected_assignment_table_view()
             window.exec()
+
+    def _get_selected_assignment_table_view(self) -> TableViewWindow:
+        """
+        Gets the table data for the selected assignment
+
+        Returns:
+            TableViewWindow: the table view window for the selected assignment
+        """
+        # Selected Assignment
+        selected_assignment: Assignment = self._get_assignment_from_name(
+            self._selected_view_item
+        )
+
+        # Get the question list for the headers
+        question_list: list[AssignmentQuestion] = (
+            assignment_service.get_assignment_questions(selected_assignment.id)
+        )
+
+        # Get the roster
+        student_list = class_service.get_students_in_class(self._selected_class.id)
+
+        # Get or Create the rows for each student
+        table = []
+        for student in student_list:
+            # Get the student score for each question
+            score_records: list["StudentQuestionScore"] = (
+                scoring_service.get_student_scores_for_assignment(
+                    selected_assignment.id, student.id
+                )
+            )
+            row_data = [
+                student.student_number,
+                student.last_name,
+                student.first_name,
+            ]
+            # Get the time taken from the database
+            total_time = scoring_service.get_student_assignment_time(
+                student.id, selected_assignment.id
+            )
+            if score_records == []:
+                table.append(
+                    row_data + [0 for _ in range(len(question_list))] + [total_time]
+                )
+            else:
+                table.append(
+                    row_data + [s.points_scored for s in score_records] + [total_time]
+                )  # TODO: figure out what structure gets returned
+
+        window = TableViewWindow(self)
+        window.set_headers(
+            ["Student ID", "Last Name", "First Name"]
+            + [q.text for q in question_list]
+            + ["Time", "Total"]
+        )
+        window.accept_signal.connect(self._update_student_scores_from_table_view)
+        window.set_model_data(table)
+        window.sum_totals()
+
+        return window
+
+    def _update_student_scores_from_table_view(
+        self, model: QtGui.QStandardItemModel
+    ) -> None:
+        """
+        Slot to handle updating student scores from the table view.
+
+        Args:
+            model (QtGui.QStandardItemModel): the model from the table view with updated scores
+        """
+        # Get the selected assignment
+        selected_assignment: Assignment = self._get_assignment_from_name(
+            self._selected_view_item
+        )
+
+        # Get the question list for the headers
+        question_list: list[AssignmentQuestion] = (
+            assignment_service.get_assignment_questions(selected_assignment.id)
+        )
+
+        # Loop though all the students in the model and update their assignment scores, question scores, and total time if applicable
+        for r in range(model.rowCount()):
+            student_number = model.item(r, 0).text()
+            student = students_service.get_student_by_number(student_number)
+
+            # Update question scores
+            for c in range(3, 3 + len(question_list)):
+                question_score = float(model.item(r, c).text())
+                question = question_list[c - 3]
+                scoring_service.update_student_question_score(
+                    student.id, question.id, question_score
+                )
+
+            # Update total time if applicable
+            if model.item(r, 3 + len(question_list)).text() != "":
+                total_time = int(model.item(r, 3 + len(question_list)).text())
+                scoring_service.update_student_assignment_time(
+                    student.id, selected_assignment.id, total_time
+                )
 
     def _add_row_to_data_model(self, text: str) -> None:
         """
