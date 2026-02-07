@@ -79,7 +79,7 @@ class AssignmentQuestion(BaseModel):
     id = AutoField()
     assignment = ForeignKeyField(Assignment, backref="questions", on_delete="CASCADE")
     text = TextField()
-    point_value = FloatField()
+    point_value = IntegerField()
 
 
 class ClassAssignment(BaseModel):

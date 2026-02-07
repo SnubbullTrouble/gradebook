@@ -11,7 +11,7 @@ if typing.TYPE_CHECKING:
     from gradebook.database.models import Class, StudentQuestionScore
 
 
-class Homework(Tab):
+class Test(Tab):
 
     _data_model = QtCore.QStringListModel()
     _assignment_list: list[Assignment] = []
@@ -92,7 +92,7 @@ class Homework(Tab):
 
         # Add the button
         self._bGrade = QtWidgets.QPushButton("Grade")
-        self._bGrade.setObjectName("bGrade")
+        self._bGrade.setObjectName(f"bGrade")
         self._horizontal_layout.addWidget(self._bGrade)
 
         # Add the layout
@@ -151,12 +151,10 @@ class Homework(Tab):
                     student.first_name,
                 ]
                 if score_records == []:
-                    table.append(
-                        row_data + [0 for i in range(len(question_list))] + ["", ""]
-                    )
+                    table.append(row_data + [0 for i in range(len(question_list) + 2)])
                 else:
                     table.append(
-                        row_data + [s.points_scored for s in score_records] + ["", ""]
+                        row_data + [s.points_scored for s in score_records]
                     )  # TODO: figure out what structure gets returned
 
             window = TableViewWindow(self)
@@ -190,7 +188,6 @@ class Homework(Tab):
                 + [q.text for q in question_list]
                 + ["Time", "Total"]
             )
-
             window.set_model_data(table)
             _sum_totals(window)
             window.exec()

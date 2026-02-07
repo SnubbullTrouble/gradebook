@@ -2,6 +2,7 @@ from gradebook.views.assignment_window.assignment_window import AssignmentWindow
 from gradebook.views.main_window.errors import InvalidTabError
 from gradebook.views.main_window.tabs.homework_tab import Homework
 from gradebook.views.main_window.tabs.roster_tab import Roster
+from gradebook.views.main_window.tabs.test_tab import Test
 from gradebook.views.main_window.ui_mainwindow import Ui_MainWindow
 from PySide6.QtWidgets import QMainWindow, QApplication
 from PySide6 import QtWidgets, QtCore
@@ -10,7 +11,6 @@ from gradebook.database.services import classes as class_service
 from gradebook.database.services import students as student_service
 from gradebook.database.services import assignments as assignment_service
 from gradebook.views.main_window.tabs.tab import Tab
-from gradebook.database.models import Student
 from gradebook.views.dialogs.new_student import NewStudentDialog
 from gradebook.views.table_view_window.table_view_window import TableViewWindow
 from gradebook.views.main_window.save_state import SaveState
@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
 
     # UI data
     _unsaved_changes = []
-    _tabs = [Roster, Homework]
+    _tabs = [Roster, Homework, Test]
 
     # Database data
     _selected_class = None
@@ -175,7 +175,7 @@ class MainWindow(QMainWindow):
         """
         if self._selected_class is not None:
             dialog = AssignmentWindow()
-            tab: Homework = self._current_tab
+            tab: Homework | Test = self._current_tab
             dialog.set_existing_assignment_names(tab.assignment_names)
             dialog.exec()
 
@@ -194,9 +194,6 @@ class MainWindow(QMainWindow):
                 assignment_service.assign_to_class(
                     self._selected_class, new_assignment_record
                 )
-
-                # Make a record of answers for each student in the class
-
                 self._refresh_tables()
             else:
                 self._set_status("Cancelling assignment addition.")
@@ -243,6 +240,8 @@ class MainWindow(QMainWindow):
             case Roster.__name__:
                 self._add_student_clicked()
             case Homework.__name__:
+                self._add_assignment_clicked()
+            case Test.__name__:
                 self._add_assignment_clicked()
             case _:
                 raise InvalidTabError(self._current_tab.name)

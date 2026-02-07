@@ -192,7 +192,7 @@ def seed_scores(rosters, class_assignments, assignment_to_questions):
                 StudentQuestionScore.create(
                     student=roster_entry.student,
                     assignment_question=q,
-                    points_scored=round(points, 2),
+                    points_scored=int(round(points, 2)),
                 )
 
             StudentAssignmentScore.create(

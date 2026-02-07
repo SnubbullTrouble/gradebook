@@ -10,6 +10,7 @@ from gradebook.database.models import (
     AssignmentQuestion,
     Assignment,
 )
+from peewee import prefetch
 
 
 def record_full_assignment(
