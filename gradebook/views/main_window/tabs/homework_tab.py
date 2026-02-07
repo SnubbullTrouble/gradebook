@@ -160,31 +160,6 @@ class Homework(Tab):
                     )  # TODO: figure out what structure gets returned
 
             window = TableViewWindow(self)
-
-            def _sum_totals(self) -> None:
-                """
-                Gets the points sum for each row and updates the table
-                """
-                if window._data_model_update_lock:
-                    return
-
-                # Prevent an infinite loop
-                window._data_model_update_lock = True
-
-                for r in range(window._data_model.rowCount()):
-                    _sum = 0
-                    for c in range(3, window._data_model.columnCount() - 2):
-                        _sum += float(window._data_model.item(r, c).text())
-                    window._data_model.setItem(
-                        r,
-                        window._data_model.columnCount() - 1,
-                        QtGui.QStandardItem(str(f"{_sum:.2f}")),
-                    )
-
-                # Unlock for the next time it changes
-                window._data_model_update_lock = False
-
-            window._data_model.dataChanged.connect(_sum_totals)
             window.set_headers(
                 ["Student ID", "Last Name", "First Name"]
                 + [q.text for q in question_list]
@@ -192,7 +167,7 @@ class Homework(Tab):
             )
 
             window.set_model_data(table)
-            _sum_totals(window)
+            window.sum_totals()
             window.exec()
 
     def _add_row_to_data_model(self, text: str) -> None:
