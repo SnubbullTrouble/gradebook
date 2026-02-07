@@ -9,25 +9,45 @@ from gradebook.database.models import (
     AssignmentQuestion,
     ClassAssignment,
     StudentAssignmentScore,
-    AssignmentCategoryWeight
+    AssignmentCategoryWeight,
 )
 from gradebook.database.services.classes import create_class, enroll_student
 from gradebook.database.services.students import create_student
 from gradebook.database.services.assignments import create_assignment, assign_to_class
-from gradebook.database.services.scoring import record_full_assignment, set_category_weight, compute_final_grade
+from gradebook.database.services.scoring import (
+    record_full_assignment,
+    set_category_weight,
+    compute_final_grade,
+)
 
 
 @pytest.fixture(autouse=True)
 def reset_db():
     """Reset the database before each test."""
-    db.drop_tables([
-        ClassRoster, ClassAssignment, StudentAssignmentScore, AssignmentCategoryWeight,
-        AssignmentQuestion, Assignment, Student, Class
-    ])
-    db.create_tables([
-        Class, Student, ClassRoster, Assignment, AssignmentQuestion, ClassAssignment,
-        StudentAssignmentScore, AssignmentCategoryWeight
-    ])
+    db.drop_tables(
+        [
+            ClassRoster,
+            ClassAssignment,
+            StudentAssignmentScore,
+            AssignmentCategoryWeight,
+            AssignmentQuestion,
+            Assignment,
+            Student,
+            Class,
+        ]
+    )
+    db.create_tables(
+        [
+            Class,
+            Student,
+            ClassRoster,
+            Assignment,
+            AssignmentQuestion,
+            ClassAssignment,
+            StudentAssignmentScore,
+            AssignmentCategoryWeight,
+        ]
+    )
     yield
 
 
@@ -93,7 +113,12 @@ def test_record_assignment_for_non_enrolled_student_raises():
     a = create_assignment("Quiz 2", "quiz", [5])
     class_assignment = assign_to_class(c, a)
     with pytest.raises(IntegrityError):
-        record_full_assignment(ClassRoster(class_ref=c, student=s), class_assignment, {1: 5}, total_time=600)
+        record_full_assignment(
+            ClassRoster(class_ref=c, student=s),
+            class_assignment,
+            {1: 5},
+            total_time=600,
+        )
 
 
 def test_set_category_weight_and_compute_grade():
@@ -104,8 +129,12 @@ def test_set_category_weight_and_compute_grade():
     a2 = create_assignment("Homework 1", "homework", [10])
     ca1 = assign_to_class(c, a1)
     ca2 = assign_to_class(c, a2)
-    record_full_assignment(roster, ca1, {q.id: q.point_value for q in a1.questions}, total_time=1200)
-    record_full_assignment(roster, ca2, {q.id: q.point_value for q in a2.questions}, total_time=1800)
+    record_full_assignment(
+        roster, ca1, {q.id: q.point_value for q in a1.questions}, total_time=1200
+    )
+    record_full_assignment(
+        roster, ca2, {q.id: q.point_value for q in a2.questions}, total_time=1800
+    )
     set_category_weight(c, "quiz", 0.7)
     set_category_weight(c, "homework", 0.3)
     final_grade = compute_final_grade(roster)
@@ -124,7 +153,9 @@ def test_compute_grade_with_multiple_assignments_and_types():
     assign_to_class(c, a3)
     for a in [a1, a2, a3]:
         ca = ClassAssignment.get(class_ref=c, assignment=a)
-        record_full_assignment(roster, ca, {q.id: q.point_value for q in a.questions}, total_time=1500)
+        record_full_assignment(
+            roster, ca, {q.id: q.point_value for q in a.questions}, total_time=1500
+        )
     set_category_weight(c, "quiz", 0.2)
     set_category_weight(c, "test", 0.5)
     set_category_weight(c, "homework", 0.3)

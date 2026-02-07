@@ -1,8 +1,7 @@
 from gradebook.views.assignment_window.assignment_window import AssignmentWindow
 from gradebook.views.main_window.errors import InvalidTabError
-from gradebook.views.main_window.tabs.homework_tab import Homework
 from gradebook.views.main_window.tabs.roster_tab import Roster
-from gradebook.views.main_window.tabs.test_tab import Test
+from gradebook.views.main_window.tabs.assignment_tab import Test, Homework
 from gradebook.views.main_window.ui_mainwindow import Ui_MainWindow
 from PySide6.QtWidgets import QMainWindow, QApplication
 from PySide6 import QtWidgets, QtCore
