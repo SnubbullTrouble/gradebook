@@ -174,3 +174,10 @@ class Project(AssignmentTab):
 
     def __init__(self):
         super().__init__()
+
+
+class Final(AssignmentTab):
+    name = "Final"
+
+    def __init__(self):
+        super().__init__()
