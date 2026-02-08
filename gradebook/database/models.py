@@ -67,7 +67,7 @@ class Assignment(BaseModel):
             ("homework", "homework"),
             ("final", "final"),
             ("project", "project"),
-            ("participation", "participation"),
+            ("attendance", "attendance"),
         ]
     )
     # total_points = FloatField()

@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from PySide6 import QtWidgets, QtCore, QtGui
-from gradebook.database.models import BaseModel
+from gradebook.database.models import BaseModel, Class
 
 
 class Tab(QtWidgets.QWidget):
@@ -10,7 +10,6 @@ class Tab(QtWidgets.QWidget):
 
     fetch_data = QtCore.Signal(BaseModel)
     refresh_view = QtCore.Signal()
-    save_data = QtCore.Signal()
 
     def __init__(self) -> None:
         """
@@ -21,20 +20,12 @@ class Tab(QtWidgets.QWidget):
         # Connect signals
         self.fetch_data.connect(self.on_fetch_data)
         self.refresh_view.connect(self.on_refresh_view)
-        self.save_data.connect(self.on_save_data)
 
         # Create the view
         self._create_view()
 
     @abstractmethod
-    def on_save_data(self) -> None:
-        """
-        Slot to handle data saving.
-        """
-        raise NotImplementedError("Subclasses must implement on_save_data method.")
-
-    @abstractmethod
-    def on_fetch_data(self, model: BaseModel) -> None:
+    def on_fetch_data(self, selected_class: "Class") -> None:
         """
         Fetches data from the database and holds caches it.
         """

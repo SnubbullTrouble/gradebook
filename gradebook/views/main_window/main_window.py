@@ -1,6 +1,6 @@
 from gradebook.views.assignment_window.assignment_window import AssignmentWindow
 from gradebook.views.main_window.errors import InvalidTabError
-from gradebook.views.main_window.tabs.roster_tab import RosterTab
+from gradebook.views.main_window.tabs.roster_tab import Roster
 from gradebook.views.main_window.tabs.assignment_tab import (
     AssignmentTab,
     Final,
@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
 
     # UI data
     _unsaved_changes = []
-    _tabs = [RosterTab, Homework, Test, Quiz, Project, Final]
+    _tabs = [Roster, Homework, Test, Quiz, Project, Final]
 
     # Database data
     _selected_class = None
@@ -126,7 +126,7 @@ class MainWindow(QMainWindow):
 
                 # Confirm
                 if self._show_verification_dialog:
-                    roster_tab: RosterTab = self._current_tab
+                    roster_tab: Roster = self._current_tab
 
                     verification_dialog = TableViewWindow(self)
                     verification_dialog.set_headers(roster_tab.headers)
@@ -242,15 +242,12 @@ class MainWindow(QMainWindow):
         """
         Handler for the Add button click event.
         """
-        match self._current_tab.name:
-            case RosterTab.__name__:
-                self._add_student_clicked()
-            case Homework.__name__:
-                self._add_assignment_clicked()
-            case Test.__name__:
-                self._add_assignment_clicked()
-            case _:
-                raise InvalidTabError(self._current_tab.name)
+        if isinstance(self._current_tab, Roster):
+            self._add_student_clicked()
+        elif isinstance(self._current_tab, AssignmentTab):
+            self._add_assignment_clicked()
+        else:
+            raise InvalidTabError(self._current_tab.name)
 
     def _initialize_save_state(self) -> None:
         """Initializes the Save State by reading the session data from the save state toml"""

@@ -42,23 +42,17 @@ class AssignmentTab(Tab):
             self._data_model.index(i).data() for i in range(self._data_model.rowCount())
         ]
 
-    def on_save_data(self) -> None:
-        """
-        Slot to handle data saving.
-        """
-        raise NotImplementedError("Subclasses must implement on_save_data method.")
-
-    def on_fetch_data(self, model: "Class") -> None:
+    def on_fetch_data(self, selected_class: "Class") -> None:
         """
         Fetches the data and caches it for later.
 
         Args:
             model (Class): the class to get assignments of
         """
-        self._selected_class = model
+        self._selected_class = selected_class
         # Get all the assignments for the class
         self._assignment_list = assignment_service.get_assignments_for_class(
-            model.id, self.name.lower()
+            selected_class.id, self.name.lower()
         )
 
     def on_refresh_view(self) -> None:

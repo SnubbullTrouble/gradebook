@@ -7,7 +7,7 @@ if typing.TYPE_CHECKING:
     from gradebook.database.models import Student, Class
 
 
-class RosterTab(Tab):
+class Roster(Tab):
 
     _data_model = QtGui.QStandardItemModel()
     _roster_data: list["Student"] = []
@@ -26,21 +26,15 @@ class RosterTab(Tab):
         return self._roster_data
 
     @property
-    def headers(self) -> None:
+    def headers(self) -> list[str]:
         """Headers for the View"""
         return ["Student Number", "Last Name", "First Name"]
 
-    def on_save_data(self) -> None:
-        """
-        Slot to handle data saving.
-        """
-        raise NotImplementedError("Subclasses must implement on_save_data method.")
-
-    def on_fetch_data(self, model: "Class") -> None:
+    def on_fetch_data(self, selected_class: "Class") -> None:
         """
         Fetches data from the database and holds caches it.
         """
-        self._roster_data = class_service.get_students_in_class(model.id)
+        self._roster_data = class_service.get_students_in_class(selected_class.id)
 
     def on_refresh_view(self) -> list["Student"]:
         """
