@@ -1,5 +1,6 @@
 from gradebook.views.assignment_window.assignment_window import AssignmentWindow
 from gradebook.views.main_window.errors import InvalidTabError
+from gradebook.views.main_window.tabs.final_grade_tab import Grade
 from gradebook.views.main_window.tabs.roster_tab import Roster
 from gradebook.views.main_window.tabs.assignment_tab import (
     AssignmentTab,
@@ -39,7 +40,7 @@ class MainWindow(QMainWindow):
 
     # UI data
     _unsaved_changes = []
-    _tabs = [Roster, Homework, Test, Quiz, Project, Final]
+    _tabs = [Roster, Homework, Test, Quiz, Project, Final, Grade]
 
     # Database data
     _selected_class = None

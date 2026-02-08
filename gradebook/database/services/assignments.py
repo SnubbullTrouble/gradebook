@@ -1,12 +1,13 @@
 import dataclasses
 from typing import List
-from peewee import IntegrityError
 from gradebook.database.models import (
     Assignment,
+    AssignmentCategoryWeight,
     AssignmentQuestion,
     ClassAssignment,
     Class,
 )
+from gradebook.database.services import scoring
 
 
 @dataclasses.dataclass
@@ -105,4 +106,75 @@ def get_assignment_questions(assignment_id) -> list[AssignmentQuestion]:
     )
 
 
-# def get_student_assignment_scores(student: "Student", assignment_type: str) -> list[Assignment]:
+def get_student_category_score(student_id: int, class_id: int, category: str) -> int:
+    """
+    Gets the total score for a student in a class for a particular category.
+
+    Args:
+        student_id (int): the student to get the score for
+        class_id (int): the class to get the score for
+        category (str): the category to get the score for
+
+    Returns:
+        int: the total score for the student in the given category for the given class
+    """
+    # Get all the assignments for the class and category
+    assignments = get_assignments_for_class(class_id, category)
+
+    # Get all the scores for the student for those assignments
+    total_score = 0
+    total_possible = 0
+    for assignment in assignments:
+        # Get the score for each question in the assignment or 0 if not scored
+        points_scored = scoring.get_student_scores_for_assignment(
+            assignment.id, student_id
+        )
+        total_score += (
+            sum([_.points_scored for _ in points_scored]) if points_scored else 0
+        )
+
+        # Get the total possible points for the assignment
+        total_possible += get_assignment_questions_total_possible_points(assignment.id)
+
+    return total_score if total_possible == 0 else total_score / total_possible * 100
+
+
+def get_assignment_questions_total_possible_points(assignment_id: int) -> int:
+    """
+    Gets the total possible points for an assignment by summing the point values of its questions.
+
+    Args:
+        assignment_id (int): the ID of the assignment to calculate total points for
+
+    Returns:
+        int: the total possible points for the assignment
+    """
+    return sum(
+        q.point_value
+        for q in AssignmentQuestion.select()
+        .join(Assignment)
+        .where(Assignment.id == assignment_id)
+    )
+
+
+def get_assignment_weight(class_id: int, category: str) -> float:
+    """
+    Gets the weight for a particular category in a class.
+
+    Args:
+        class_id (int): the class to get the weight for
+        category (str): the category to get the weight for
+
+    Returns:
+        float: the weight for the category in the class
+    """
+    obj = (
+        AssignmentCategoryWeight.select()
+        .where(
+            (AssignmentCategoryWeight.category == category)
+            & (AssignmentCategoryWeight.class_ref == class_id)
+        )
+        .first()
+    )
+
+    return obj.weight if obj else 0.0
