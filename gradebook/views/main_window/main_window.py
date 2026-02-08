@@ -1,6 +1,6 @@
 from gradebook.views.assignment_window.assignment_window import AssignmentWindow
 from gradebook.views.main_window.errors import InvalidTabError
-from gradebook.views.main_window.tabs.roster_tab import Roster
+from gradebook.views.main_window.tabs.roster_tab import RosterTab
 from gradebook.views.main_window.tabs.assignment_tab import (
     AssignmentTab,
     Project,
