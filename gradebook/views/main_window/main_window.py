@@ -16,7 +16,7 @@ from gradebook.database.services import classes as class_service
 from gradebook.database.services import students as student_service
 from gradebook.database.services import assignments as assignment_service
 from gradebook.views.main_window.tabs.tab import Tab
-from gradebook.views.dialogs.new_student import NewStudentDialog
+from gradebook.views.student_window.new_student import NewStudentDialog
 from gradebook.views.table_view_window.table_view_window import TableViewWindow
 from gradebook.views.main_window.save_state import SaveState
 from gradebook.views.main_window.toml_utils import load_from_toml, save_to_toml
@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
 
                 # Confirm
                 if self._show_verification_dialog:
-                    roster_tab: Roster = self._current_tab
+                    roster_tab: RosterTab = self._current_tab
 
                     verification_dialog = TableViewWindow(self)
                     verification_dialog.set_headers(roster_tab.headers)
@@ -242,7 +242,7 @@ class MainWindow(QMainWindow):
         Handler for the Add button click event.
         """
         match self._current_tab.name:
-            case Roster.__name__:
+            case RosterTab.__name__:
                 self._add_student_clicked()
             case Homework.__name__:
                 self._add_assignment_clicked()

@@ -7,7 +7,7 @@ if typing.TYPE_CHECKING:
     from gradebook.database.models import Student, Class
 
 
-class Roster(Tab):
+class RosterTab(Tab):
 
     _data_model = QtGui.QStandardItemModel()
     _roster_data: list["Student"] = []

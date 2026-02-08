@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QDialog, QWidget
-from gradebook.views.dialogs.ui_new_student import Ui_Dialog
+from gradebook.views.student_window.ui_new_student import Ui_Dialog
 
 
 class NewStudentDialog(QDialog):

@@ -54,6 +54,7 @@ class Tab(QtWidgets.QWidget):
         """
         return type(self).__name__
 
+    @abstractmethod
     def _create_view(self) -> None:
         """
         Add a view to the tab.
