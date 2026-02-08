@@ -1,7 +1,13 @@
 from gradebook.views.assignment_window.assignment_window import AssignmentWindow
 from gradebook.views.main_window.errors import InvalidTabError
 from gradebook.views.main_window.tabs.roster_tab import Roster
-from gradebook.views.main_window.tabs.assignment_tab import Test, Homework
+from gradebook.views.main_window.tabs.assignment_tab import (
+    AssignmentTab,
+    Project,
+    Quiz,
+    Test,
+    Homework,
+)
 from gradebook.views.main_window.ui_mainwindow import Ui_MainWindow
 from PySide6.QtWidgets import QMainWindow, QApplication
 from PySide6 import QtWidgets, QtCore
@@ -32,7 +38,7 @@ class MainWindow(QMainWindow):
 
     # UI data
     _unsaved_changes = []
-    _tabs = [Roster, Homework, Test]
+    _tabs = [Roster, Homework, Test, Quiz, Project]
 
     # Database data
     _selected_class = None
@@ -174,7 +180,7 @@ class MainWindow(QMainWindow):
         """
         if self._selected_class is not None:
             dialog = AssignmentWindow()
-            tab: Homework | Test = self._current_tab
+            tab: AssignmentTab = self._current_tab
             dialog.set_existing_assignment_names(tab.assignment_names)
             dialog.exec()
 

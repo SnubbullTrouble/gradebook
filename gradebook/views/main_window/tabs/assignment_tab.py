@@ -160,3 +160,17 @@ class Test(AssignmentTab):
 
     def __init__(self):
         super().__init__()
+
+
+class Quiz(AssignmentTab):
+    name = "Quiz"
+
+    def __init__(self):
+        super().__init__()
+
+
+class Project(AssignmentTab):
+    name = "Project"
+
+    def __init__(self):
+        super().__init__()
