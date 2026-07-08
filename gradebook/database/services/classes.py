@@ -4,7 +4,10 @@ from gradebook.database.models import Class, ClassRoster, Student
 from gradebook.database.repositories import (
     get_class_by_id as repo_get_class_by_id,
     get_class_dto as repo_get_class_dto,
+    get_all_classes_dto as repo_get_all_classes_dto,
+    get_students_for_class_dto as repo_get_students_for_class_dto,
 )
+from gradebook.database.dtos import ClassDTO, StudentDTO
 from datetime import datetime
 
 
@@ -80,6 +83,16 @@ def get_class_by_id(class_id: int) -> Class | None:
 def get_class_dto(class_id: int):
     """Retrieve a class DTO by ID."""
     return repo_get_class_dto(class_id)
+
+
+def get_all_classes_dto() -> list[ClassDTO]:
+    """Retrieve all class DTOs."""
+    return repo_get_all_classes_dto()
+
+
+def get_students_in_class_dto(class_id: int) -> list[StudentDTO]:
+    """Retrieve student DTOs enrolled in a class."""
+    return repo_get_students_for_class_dto(class_id)
 
 
 def get_students_in_class(class_id: int) -> list["Student"]:

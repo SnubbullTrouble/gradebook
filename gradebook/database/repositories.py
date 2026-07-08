@@ -4,6 +4,7 @@ from .models import (
     AssignmentQuestion,
     Class,
     ClassAssignment,
+    ClassRoster,
     Student,
 )
 from .dtos import (
@@ -36,6 +37,65 @@ def get_class_dto(class_id: int) -> ClassDTO | None:
         start_date=cls.start_date,
         end_date=cls.end_date,
     )
+
+
+def get_all_classes_dto() -> list[ClassDTO]:
+    return [
+        ClassDTO(
+            id=cls.id,
+            name=cls.name,
+            start_date=cls.start_date,
+            end_date=cls.end_date,
+        )
+        for cls in Class.select()
+    ]
+
+
+def get_all_students_dto() -> list[StudentDTO]:
+    return [
+        StudentDTO(
+            id=s.id,
+            student_number=s.student_number,
+            first_name=s.first_name,
+            last_name=s.last_name,
+        )
+        for s in Student.select()
+    ]
+
+
+def get_students_for_class_dto(class_id: int) -> list[StudentDTO]:
+    students = (
+        Student.select()
+        .join(ClassRoster)
+        .join(Class)
+        .where(Class.id == class_id)
+    )
+    return [
+        StudentDTO(
+            id=s.id,
+            student_number=s.student_number,
+            first_name=s.first_name,
+            last_name=s.last_name,
+        )
+        for s in students
+    ]
+
+
+def get_classes_for_student_dto(student_id: int) -> list[ClassDTO]:
+    classes = (
+        Class.select()
+        .join(ClassRoster)
+        .where(ClassRoster.student == student_id)
+    )
+    return [
+        ClassDTO(
+            id=cls.id,
+            name=cls.name,
+            start_date=cls.start_date,
+            end_date=cls.end_date,
+        )
+        for cls in classes
+    ]
 
 
 def get_class_by_id(class_id: int) -> Class | None:
@@ -92,3 +152,16 @@ def get_assignment_dto(assignment_id: int) -> AssignmentDTO | None:
         category=assignment.category,
         questions=questions,
     )
+
+
+def get_assignments_for_class_dto(class_id: int, category: str | None = None) -> list[AssignmentDTO]:
+    assignments = fetch_assignments_for_class(class_id, category)
+    return [
+        AssignmentDTO(
+            id=assignment.id,
+            title=assignment.title,
+            category=assignment.category,
+            questions=get_questions_for_assignment_dto(assignment.id),
+        )
+        for assignment in assignments
+    ]

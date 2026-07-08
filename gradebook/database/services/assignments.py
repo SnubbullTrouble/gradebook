@@ -15,6 +15,9 @@ from gradebook.database.repositories import (
     fetch_assignments_for_class,
     get_assignment_dto as repo_get_assignment_dto,
     get_class_dto as repo_get_class_dto,
+    get_assignment_question_dto as repo_get_assignment_question_dto,
+    get_questions_for_assignment_dto as repo_get_questions_for_assignment_dto,
+    get_assignments_for_class_dto as repo_get_assignments_for_class_dto,
 )
 
 
@@ -115,6 +118,21 @@ def get_assignments_for_class(class_id: int, category: str = None) -> list[Assig
 def get_assignment_dto(assignment_id: int):
     """Retrieve an assignment DTO by its ID."""
     return repo_get_assignment_dto(assignment_id)
+
+
+def get_assignments_for_class_dto(class_id: int, category: str = None):
+    """Retrieve assignment DTOs for a class."""
+    return repo_get_assignments_for_class_dto(class_id, category)
+
+
+def get_assignment_question_dto(question_id: int):
+    """Retrieve a question DTO by its ID."""
+    return repo_get_assignment_question_dto(question_id)
+
+
+def get_questions_for_assignment_dto(assignment_id: int):
+    """Retrieve question DTOs for an assignment."""
+    return repo_get_questions_for_assignment_dto(assignment_id)
 
 
 def get_class_dto(class_id: int):
