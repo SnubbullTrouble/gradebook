@@ -11,7 +11,11 @@ from gradebook.database.models import db
 from peewee import IntegrityError
 from peewee import prefetch
 from gradebook.database.services import scoring
-from gradebook.database.repositories import fetch_assignments_for_class
+from gradebook.database.repositories import (
+    fetch_assignments_for_class,
+    get_assignment_dto as repo_get_assignment_dto,
+    get_class_dto as repo_get_class_dto,
+)
 
 
 @dataclasses.dataclass
@@ -106,6 +110,16 @@ def get_assignments_for_class(class_id: int, category: str = None) -> list[Assig
         list(Assignment): the list of assignments for this class (and category, if provided)
     """
     return fetch_assignments_for_class(class_id, category)
+
+
+def get_assignment_dto(assignment_id: int):
+    """Retrieve an assignment DTO by its ID."""
+    return repo_get_assignment_dto(assignment_id)
+
+
+def get_class_dto(class_id: int):
+    """Retrieve a class DTO by its ID."""
+    return repo_get_class_dto(class_id)
 
 
 def get_assignment_questions(assignment_id) -> list[AssignmentQuestion]:
