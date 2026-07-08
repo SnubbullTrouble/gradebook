@@ -36,3 +36,17 @@ def get_student_by_number(student_number: str) -> Student:
         Student.DoesNotExist: If no student with the given number exists in the class.
     """
     return Student.select().where((Student.student_number == student_number)).get()
+
+
+def create_student_dto(student_number: str, first_name: str, last_name: str):
+    """Non-breaking helper that returns a StudentDTO from the repository."""
+    from gradebook.database.repositories import create_student_dto as repo_create
+
+    return repo_create(student_number, first_name, last_name)
+
+
+def get_student_dto(student_number: str):
+    """Non-breaking helper that returns a StudentDTO or None."""
+    from gradebook.database.repositories import get_student_by_number_dto as repo_get
+
+    return repo_get(student_number)
