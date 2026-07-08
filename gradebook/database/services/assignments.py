@@ -18,6 +18,8 @@ from gradebook.database.repositories import (
     get_assignment_question_dto as repo_get_assignment_question_dto,
     get_questions_for_assignment_dto as repo_get_questions_for_assignment_dto,
     get_assignments_for_class_dto as repo_get_assignments_for_class_dto,
+    get_category_weight_dto as repo_get_category_weight_dto,
+    get_category_weights_for_class_dto as repo_get_category_weights_for_class_dto,
 )
 
 
@@ -138,6 +140,16 @@ def get_questions_for_assignment_dto(assignment_id: int):
 def get_class_dto(class_id: int):
     """Retrieve a class DTO by its ID."""
     return repo_get_class_dto(class_id)
+
+
+def get_category_weight_dto(class_id: int, category: str):
+    """Retrieve category weight DTO for a class and category."""
+    return repo_get_category_weight_dto(class_id, category)
+
+
+def get_category_weights_for_class_dto(class_id: int):
+    """Retrieve category weight DTOs for a class."""
+    return repo_get_category_weights_for_class_dto(class_id)
 
 
 def get_assignment_questions(assignment_id) -> list[AssignmentQuestion]:

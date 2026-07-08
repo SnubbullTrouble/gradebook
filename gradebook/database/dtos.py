@@ -27,6 +27,39 @@ class AssignmentQuestionDTO:
 
 
 @dataclass
+class ClassAssignmentDTO:
+    id: int
+    class_id: int
+    assignment_id: int
+    total_points: float
+
+
+@dataclass
+class AssignmentCategoryWeightDTO:
+    id: int
+    class_id: int
+    category: str
+    weight: float
+
+
+@dataclass
+class StudentAssignmentScoreDTO:
+    id: int
+    roster_entry_id: int
+    class_assignment_id: int
+    total_score: float
+    total_time: int | None
+
+
+@dataclass
+class StudentQuestionScoreDTO:
+    id: int
+    student_id: int
+    assignment_question_id: int
+    points_scored: float
+
+
+@dataclass
 class AssignmentDTO:
     id: int
     title: str

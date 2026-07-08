@@ -12,6 +12,13 @@ from gradebook.database.models import (
 )
 from peewee import prefetch
 from gradebook.database.models import db
+from gradebook.database.repositories import (
+    get_class_assignment_dto as repo_get_class_assignment_dto,
+    get_student_assignment_score_dto as repo_get_student_assignment_score_dto,
+    get_student_question_score_dto as repo_get_student_question_score_dto,
+    get_student_question_scores_for_assignment_dto as repo_get_student_question_scores_for_assignment_dto,
+    get_student_assignment_scores_for_student_dto as repo_get_student_assignment_scores_for_student_dto,
+)
 
 
 def record_full_assignment(
@@ -254,3 +261,30 @@ def get_student_assignment_time(student_id: int, assignment_id: int) -> int:
     if sas:
         return sas.total_time
     return 0
+
+
+def get_class_assignment_dto(class_assignment_id: int):
+    """Retrieve a class assignment DTO by ID."""
+    return repo_get_class_assignment_dto(class_assignment_id)
+
+
+def get_student_assignment_score_dto(score_id: int):
+    """Retrieve a student assignment score DTO by ID."""
+    return repo_get_student_assignment_score_dto(score_id)
+
+
+def get_student_question_score_dto(score_id: int):
+    """Retrieve a student question score DTO by ID."""
+    return repo_get_student_question_score_dto(score_id)
+
+
+def get_student_question_scores_for_assignment_dto(
+    assignment_id: int, student_id: int
+):
+    """Retrieve score DTOs for a student's assignment questions."""
+    return repo_get_student_question_scores_for_assignment_dto(assignment_id, student_id)
+
+
+def get_student_assignment_scores_for_student_dto(student_id: int):
+    """Retrieve student assignment score DTOs for a student."""
+    return repo_get_student_assignment_scores_for_student_dto(student_id)
