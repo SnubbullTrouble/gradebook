@@ -4,7 +4,7 @@ from gradebook.database.models import Class, ClassRoster, Student
 from datetime import datetime
 
 
-def create_class(name: str, start_date: datetime, end_date: datetime) -> Class:
+def create_class(name: str, start_date: datetime | None = None, end_date: datetime | None = None) -> Class:
     """
     Create a new class.
 
