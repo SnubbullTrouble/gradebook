@@ -5,4 +5,7 @@
     },
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
+    "chat.tools.terminal.autoApprove": {
+        "pytest": true
+    },
 }

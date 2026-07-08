@@ -4,7 +4,7 @@ import pytest
 # Force tests to use in-memory SQLite database
 os.environ.setdefault("DB_PATH", ":memory:")
 
-from gradebook.database import models  # ensure models import happens after DB_PATH set
+from gradebook.database import models
 
 from gradebook.database.models import (
     db,
@@ -19,10 +19,15 @@ from gradebook.database.models import (
     StudentQuestionScore,
 )
 
+# Initialize proxy to an in-memory DB; do not auto-create tables here — tests will manage schema
+models.init_db(db_path=":memory:")
+
 
 @pytest.fixture(autouse=True)
 def reset_db():
     # Drop in an order that respects foreign keys, use safe=True to avoid errors
+    real_db = db.obj if hasattr(db, "obj") else db
+
     db.drop_tables(
         [
             StudentQuestionScore,
