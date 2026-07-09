@@ -21,6 +21,15 @@ from enum import Enum
 db = DatabaseProxy()
 
 
+def ensure_db_initialized(db_path: str | None = None, sqlite_uri: str | None = None, create_tables: bool = False):
+    """Initialize the database proxy if needed and optionally create tables."""
+    if getattr(db, "obj", None) is not None:
+        return db.obj
+
+    init_db(db_path=db_path, sqlite_uri=sqlite_uri, create_tables=create_tables)
+    return db.obj
+
+
 def init_db(db_path: str | None = None, sqlite_uri: str | None = None, create_tables: bool = False):
     """Initialize the database proxy.
 
