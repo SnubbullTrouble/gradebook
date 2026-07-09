@@ -17,7 +17,7 @@ class Question:
 
 
 def create_assignment(
-    title: str, category: str, questions: List[Question]
+    title: str, category: str, questions: List[Question] | List[int] | None
 ) -> Assignment:
     """
     Create an assignment with multiple questions.
@@ -31,9 +31,29 @@ def create_assignment(
         Assignment: The created Assignment object.
     """
     assignment = Assignment.create(title=title, category=category)
-    for q in questions:
+    if not questions:
+        return assignment
+
+    for idx, q in enumerate(questions, start=1):
+        if isinstance(q, Question):
+            text = q.question
+            points = q.points
+        elif isinstance(q, int):
+            text = f"Question {idx}"
+            points = q
+        elif isinstance(q, (tuple, list)) and len(q) >= 2:
+            text = str(q[0])
+            points = int(q[1])
+        else:
+            # Fallback: try to extract numeric value
+            try:
+                points = int(q)
+            except Exception:
+                points = 0
+            text = f"Question {idx}"
+
         AssignmentQuestion.create(
-            assignment=assignment, text=q.question, point_value=q.points
+            assignment=assignment, text=text, point_value=points
         )
     return assignment
 

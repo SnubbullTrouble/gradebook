@@ -90,6 +90,7 @@ class ClassAssignment(BaseModel):
     assignment = ForeignKeyField(
         Assignment, backref="assigned_classes", on_delete="CASCADE"
     )
+    total_points = FloatField(default=0.0)
 
     class Meta:
         indexes = ((("class_ref", "assignment"), True),)
