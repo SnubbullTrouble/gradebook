@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 from peewee import IntegrityError
 from gradebook.database.models import Class, ClassRoster, Student
+from gradebook.database.repositories import get_class_by_id as repo_get_class_by_id
 from datetime import datetime
 
 
@@ -70,7 +71,7 @@ def get_class_by_id(class_id: int) -> Class | None:
     Returns:
         Class | None: The Class object if found, else None.
     """
-    return Class.get(Class.id == class_id)
+    return repo_get_class_by_id(class_id)
 
 
 def get_students_in_class(class_id: int) -> list["Student"]:

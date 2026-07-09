@@ -7,7 +7,11 @@ from gradebook.database.models import (
     ClassAssignment,
     Class,
 )
+from gradebook.database.models import db
+from peewee import IntegrityError
+from peewee import prefetch
 from gradebook.database.services import scoring
+from gradebook.database.repositories import fetch_assignments_for_class
 
 
 @dataclasses.dataclass
@@ -30,31 +34,37 @@ def create_assignment(
     Returns:
         Assignment: The created Assignment object.
     """
-    assignment = Assignment.create(title=title, category=category)
-    if not questions:
-        return assignment
-
-    for idx, q in enumerate(questions, start=1):
-        if isinstance(q, Question):
-            text = q.question
-            points = q.points
-        elif isinstance(q, int):
-            text = f"Question {idx}"
-            points = q
-        elif isinstance(q, (tuple, list)) and len(q) >= 2:
-            text = str(q[0])
-            points = int(q[1])
-        else:
-            # Fallback: try to extract numeric value
-            try:
-                points = int(q)
-            except Exception:
-                points = 0
-            text = f"Question {idx}"
-
-        AssignmentQuestion.create(
-            assignment=assignment, text=text, point_value=points
+    if category not in Assignment.ASSIGNMENT_CATEGORIES:
+        raise ValueError(
+            f"Invalid category '{category}'. Allowed: {Assignment.ASSIGNMENT_CATEGORIES}"
         )
+
+    # create within a transaction to ensure questions and assignment persist together
+    with db.atomic():
+        assignment = Assignment.create(title=title, category=category)
+        if not questions:
+            return assignment
+
+        for idx, q in enumerate(questions, start=1):
+            if isinstance(q, Question):
+                text = q.question
+                points = q.points
+            elif isinstance(q, int):
+                text = f"Question {idx}"
+                points = q
+            elif isinstance(q, (tuple, list)) and len(q) >= 2:
+                text = str(q[0])
+                points = int(q[1])
+            else:
+                try:
+                    points = int(q)
+                except Exception:
+                    points = 0
+                text = f"Question {idx}"
+
+            AssignmentQuestion.create(
+                assignment=assignment, text=text, point_value=points
+            )
     return assignment
 
 
@@ -77,9 +87,11 @@ def assign_to_class(cls: "Class", assignment: Assignment) -> ClassAssignment:
     total_points = sum(q.point_value for q in assignment.questions)
 
     # This will raise IntegrityError if the class_ref/assignment combination already exists.
-    return ClassAssignment.create(
-        class_ref=cls, assignment=assignment, total_points=total_points
-    )
+    # Create inside a transaction to ensure consistency
+    with db.atomic():
+        return ClassAssignment.create(
+            class_ref=cls, assignment=assignment, total_points=total_points
+        )
 
 
 def get_assignments_for_class(class_id: int, category: str = None) -> list[Assignment]:
@@ -93,20 +105,7 @@ def get_assignments_for_class(class_id: int, category: str = None) -> list[Assig
     Returns:
         list(Assignment): the list of assignments for this class (and category, if provided)
     """
-    if category:
-        return list(
-            Assignment.select()
-            .join(ClassAssignment)
-            .join(Class)
-            .where((Assignment.category == category) & (Class.id == class_id))
-        )
-    else:
-        return list(
-            Assignment.select()
-            .join(ClassAssignment)
-            .join(Class)
-            .where(Class.id == class_id)
-        )
+    return fetch_assignments_for_class(class_id, category)
 
 
 def get_assignment_questions(assignment_id) -> list[AssignmentQuestion]:

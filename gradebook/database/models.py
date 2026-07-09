@@ -10,13 +10,47 @@ from peewee import (
     IntegerField,
     DateField,
 )
+from playhouse.db_url import connect
+from playhouse.shortcuts import ReconnectMixin
+from playhouse.pool import PooledDatabase
+from peewee import DatabaseProxy
 
-# Use in-memory database for tests; replace with file path for production
-# db = SqliteDatabase(':memory:')
+from enum import Enum
 
-# Get path from ENV
-DB_PATH = os.getenv("DB_PATH", "gradebook.db")
-db = SqliteDatabase(DB_PATH)
+# Use a DatabaseProxy so tests and apps can initialize the real DB at runtime
+db = DatabaseProxy()
+
+
+def init_db(db_path: str | None = None, sqlite_uri: str | None = None, create_tables: bool = False):
+    """Initialize the database proxy.
+
+    Provide either a file path (`db_path`) or a SQLite URI (`sqlite_uri`).
+    If neither is provided, uses the `DB_PATH` env var or `gradebook.db`.
+
+    If `create_tables` is True, creates all tables after initializing.
+    """
+    DB_PATH = db_path or os.getenv("DB_PATH", "gradebook.db")
+    if sqlite_uri:
+        real_db = SqliteDatabase(sqlite_uri)
+    else:
+        real_db = SqliteDatabase(DB_PATH)
+
+    db.initialize(real_db)
+    if create_tables:
+        real_db.connect()
+        real_db.create_tables(
+            [
+                Class,
+                Student,
+                ClassRoster,
+                Assignment,
+                AssignmentQuestion,
+                ClassAssignment,
+                StudentAssignmentScore,
+                AssignmentCategoryWeight,
+                StudentQuestionScore,
+            ]
+        )
 
 
 class BaseModel(Model):
@@ -60,16 +94,26 @@ class Assignment(BaseModel):
 
     id = AutoField()
     title = CharField()
-    category = CharField(
-        choices=[
-            ("quiz", "quiz"),
-            ("test", "test"),
-            ("homework", "homework"),
-            ("final", "final"),
-            ("project", "project"),
-            ("attendance", "attendance"),
-        ]
-    )
+    # centralize allowed categories
+    ASSIGNMENT_CATEGORIES = [
+        "quiz",
+        "test",
+        "homework",
+        "final",
+        "project",
+        "attendance",
+    ]
+
+    category = CharField(choices=[(c, c) for c in ASSIGNMENT_CATEGORIES])
+
+
+class Category(Enum):
+    QUIZ = "quiz"
+    TEST = "test"
+    HOMEWORK = "homework"
+    FINAL = "final"
+    PROJECT = "project"
+    ATTENDANCE = "attendance"
     # total_points = FloatField()
 
 
@@ -134,18 +178,5 @@ class AssignmentCategoryWeight(BaseModel):
         indexes = ((("class_ref", "category"), True),)
 
 
-# Create tables
-db.connect()
-db.create_tables(
-    [
-        Class,
-        Student,
-        ClassRoster,
-        Assignment,
-        AssignmentQuestion,
-        ClassAssignment,
-        StudentAssignmentScore,
-        AssignmentCategoryWeight,
-        StudentQuestionScore,
-    ]
-)
+# NOTE: table creation is deliberatey not executed at import time.
+# Call `init_db(create_tables=True)` from application/test setup to create tables.

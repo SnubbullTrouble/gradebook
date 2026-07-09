@@ -11,6 +11,7 @@ from gradebook.database.models import (
     Assignment,
 )
 from peewee import prefetch
+from gradebook.database.models import db
 
 
 def record_full_assignment(
@@ -31,12 +32,14 @@ def record_full_assignment(
         StudentAssignmentScore: The total score recorded.
     """
     total_score = sum(question_scores.values())
-    return StudentAssignmentScore.create(
-        roster_entry=roster_entry,
-        class_assignment=class_assignment,
-        total_score=total_score,
-        total_time=total_time,
-    )
+    # Ensure recording of the full assignment is atomic with any related writes
+    with db.atomic():
+        return StudentAssignmentScore.create(
+            roster_entry=roster_entry,
+            class_assignment=class_assignment,
+            total_score=total_score,
+            total_time=total_time,
+        )
 
 
 def set_category_weight(
@@ -82,11 +85,13 @@ def compute_final_grade(cls_roster_entry: ClassRoster) -> float:
     if total_weight == 0:
         return 0.0
 
-    # Gather all assignments for this student
-    student_scores = (
-        StudentAssignmentScore.select()
-        .join(ClassRoster)
-        .where(ClassRoster.id == cls_roster_entry.id)
+    # Gather all assignments for this student, prefetch class_assignment and assignment to avoid N+1
+    student_scores = prefetch(
+        StudentAssignmentScore.select().join(ClassRoster).where(
+            ClassRoster.id == cls_roster_entry.id
+        ),
+        ClassAssignment,
+        Assignment,
     )
     category_totals: Dict[str, float] = {}
     category_max: Dict[str, float] = {}
