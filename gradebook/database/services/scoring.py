@@ -32,8 +32,20 @@ def record_full_assignment(
         StudentAssignmentScore: The total score recorded.
     """
     total_score = sum(question_scores.values())
-    # Ensure recording of the full assignment is atomic with any related writes
+    # Ensure recording of per-question scores and the aggregate is atomic.
     with db.atomic():
+        # create or update StudentQuestionScore rows
+        for qid, pts in question_scores.items():
+            sqs, created = StudentQuestionScore.get_or_create(
+                student_id=roster_entry.student.id,
+                assignment_question_id=qid,
+                defaults={"points_scored": pts},
+            )
+            if not created:
+                sqs.points_scored = pts
+                sqs.save()
+
+        # then create the aggregate StudentAssignmentScore
         return StudentAssignmentScore.create(
             roster_entry=roster_entry,
             class_assignment=class_assignment,
