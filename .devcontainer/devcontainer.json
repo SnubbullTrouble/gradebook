@@ -8,5 +8,15 @@
   ],
   "containerEnv": {
     "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "workbench.colorTheme": "GitHub Dark Default"
+      },
+      "extensions": [
+        "github.github-vscode-theme" 
+      ]
+    }
   }
 }
